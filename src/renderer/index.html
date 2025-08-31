@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>DIP Electron Application</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            height: 100vh;
+            background-color: #f5f5f5;
+        }
+        .sidebar {
+            width: 200px;
+            background-color: #333;
+            color: white;
+            padding: 20px 0;
+            height: 100%;
+            box-sizing: border-box;
+        }
+        .main-content {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+        }
+        .nav-item {
+            display: block;
+            color: white;
+            padding: 12px 20px;
+            text-decoration: none;
+            margin: 5px 0;
+            transition: background-color 0.3s;
+        }
+        .nav-item:hover {
+            background-color: #555;
+        }
+        .view-content {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-top: 20px;
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        .content {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .panel {
+            background-color: #fafafa;
+            border: 1px solid #eee;
+            border-radius: 6px;
+            padding: 15px;
+        }
+        button {
+            background-color: #4CAF50;
+            border: none;
+            color: white;
+            padding: 12px 24px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin: 4px 2px;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <h3 style="padding-left: 20px; margin-top: 0;">Navigation</h3>
+        <a href="#" class="nav-item" onclick="loadView('spatial')">Spatial</a>
+        <a href="#" class="nav-item" onclick="loadView('frequency')">Frequency</a>
+        <a href="#" class="nav-item" onclick="loadView('projection')">Projection</a>
+    </div>
+    
+    <div class="main-content">
+        <h1>DIP Electron Application</h1>
+        <div id="view-container">
+            <!-- Views will be loaded here dynamically -->
+            <div class="content">
+                <div class="panel">
+                    <h2>Application Status</h2>
+                    <p>This is the main application window for the DIP Electron application.</p>
+                    <p id="status">Loading...</p>
+                </div>
+                
+                <div class="panel">
+                    <h2>Controls</h2>
+                    <button onclick="window.location.href='about:blank'">Test Button</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // This script will be executed in the renderer process
+        document.addEventListener('DOMContentLoaded', () => {
+            const statusElement = document.getElementById('status');
+            try {
+                // In a real app, you might check if main process is available
+                statusElement.textContent = 'Application loaded successfully';
+            } catch (error) {
+                statusElement.textContent = `Error: ${error.message}`;
+            }
+        });
+        
+        
+        // Load spatial view by default when the application starts
+        document.addEventListener('DOMContentLoaded', () => {
+            loadView('spatial');
+        });
+        // Load spatial view by default when the application starts
+        document.addEventListener('DOMContentLoaded', () => {
+            loadView('spatial');
+        });
+        
+        function loadView(viewName) {
+            const container = document.getElementById('view-container');
+
+            // Clear the current content and add new view content
+            const viewMap = {
+                'spatial': './views/spatial.html',
+                'frequency': './views/frequency.html',
+                'projection': './views/projection.html'
+            };
+            const viewPath = viewMap[viewName] || './views/spatial.html';
+            fetch(viewPath)
+                .then(response => response.text())
+                .then(htmlContent => {
+                    container.innerHTML = htmlContent;
+                    // Execute any JavaScript in the loaded HTML if needed
+                    const scripts = container.querySelectorAll('script');
+                    scripts.forEach(script => {
+                        const newScript = document.createElement('script');
+                        newScript.textContent = script.textContent;
+                        document.head.appendChild(newScript);
+                        document.head.removeChild(newScript);
+                    });
+                })
+                .catch(error => {
+                    console.error('Error loading view:', error);
+                    container.innerHTML = `<div class="view-content"><h2>View</h2><p>Error loading content: ${error.message}</p></div>`;
+                });
+        }
+    </script>
+</body>
+</html>
