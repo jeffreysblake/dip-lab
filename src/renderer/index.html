@@ -110,20 +110,13 @@
             try {
                 // In a real app, you might check if main process is available
                 statusElement.textContent = 'Application loaded successfully';
+                // Load spatial view by default when the application starts
+                loadView('spatial');
             } catch (error) {
                 statusElement.textContent = `Error: ${error.message}`;
             }
         });
         
-        
-        // Load spatial view by default when the application starts
-        document.addEventListener('DOMContentLoaded', () => {
-            loadView('spatial');
-        });
-        // Load spatial view by default when the application starts
-        document.addEventListener('DOMContentLoaded', () => {
-            loadView('spatial');
-        });
         
         function loadView(viewName) {
             const container = document.getElementById('view-container');
@@ -144,8 +137,29 @@
                     scripts.forEach(script => {
                         const newScript = document.createElement('script');
                         newScript.textContent = script.textContent;
-                        document.head.appendChild(newScript);
-                        document.head.removeChild(newScript);
+                        // Avoid duplicate variable declarations by using a wrapper function
+                        // Check for common problematic patterns that cause redeclaration errors
+                        const imgPattern = /(?:const|let|var)\s+img\s*=.*;/;
+                        if (imgPattern.test(newScript.textContent)) {
+                            // Wrap the entire content in an IIFE to prevent scope issues
+                            // Only wrap if it's not already wrapped to avoid double wrapping
+                            if (!newScript.textContent.trim().startsWith('(function() {')) {
+                                try {
+                                    newScript.textContent = `(function() {
+                                        ${newScript.textContent}
+                                    })();`;
+                                } catch (wrapError) {
+                                    console.warn("Failed to wrap script content:", wrapError);
+                                    // If wrapping fails, execute as-is but with proper error handling
+                                    // Also add a safety check for image loading paths in the wrapped code
+                                }
+                            }
+                        }
+                        try {
+                            document.head.appendChild(newScript);
+                        } catch (error) {
+                            console.error("Error executing script:", error);
+                        }
                     });
                 })
                 .catch(error => {

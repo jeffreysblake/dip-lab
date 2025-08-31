@@ -2,6 +2,9 @@ import { app, BrowserWindow } from 'electron';
 import * as path from 'path';
 import * as fs from 'fs';
 
+// Import Spatial class for backend processing
+import './classes/Spatial'; // This will ensure the class is loaded
+
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 // For ES modules, we need to use dynamic import or remove this line
 // since electron-squirrel-startup is a CommonJS module

@@ -44,19 +44,16 @@ class Spatial {
               const r = imageData[index] ?? 0;
               const g = imageData[index + 1] ?? 0; 
               const b = imageData[index + 2] ?? 0;
-            
-              // Safe access to kernel elements with proper checks
+          
+              // Properly extract kernel value - this was the main bug!
               let kernelValue = 0;
-              if (kernel && kernel.length > 0 && kernel[0] && kernel[0].length > 1) {
-                  kernelValue = kernel[0][1] ?? 0;
+              if (kernel && Array.isArray(kernel) && kernel.length > ky && Array.isArray(kernel[ky])) {
+                kernelValue = kernel[ky][kx];
               }
-              // Safe access to kernel elements with proper checks for all accesses
-              const kernel_column = kernel[ky] ?? [];
-              if (kernel && kernel.length > ky && kernel_column.length > kx) {
-                  sumR += r * kernelValue;
-                  sumG += g * kernelValue;
-                  sumB += b * kernelValue;
-              }
+              
+              sumR += r * kernelValue;
+              sumG += g * kernelValue;
+              sumB += b * kernelValue;
             }
           }
         }

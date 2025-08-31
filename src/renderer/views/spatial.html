@@ -94,7 +94,20 @@
             applyFilterToCanvas('after-canvas', 'Gaussian Blur');
         };
         
-        img.src = './assets/Lenna256.png';
+        img.onerror = function() {
+            console.error("Failed to load image - check path resolution for Lenna.png");
+            // Create a placeholder if the image fails to load
+            const canvas = document.getElementById('before-canvas');
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = '#cccccc';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#333333';
+            ctx.font = '16px Arial';
+            ctx.fillText("Image failed to load", 10, 20);
+        };
+        
+        // Simple and direct approach for Electron development mode
+        img.src = '../../assets/Lenna.png';
         
         // Set up filter change event
         document.getElementById('filter-select').addEventListener('change', function() {
@@ -110,24 +123,85 @@
             canvas.width = image.width;
             canvas.height = image.height;
             
-            // Draw the image on the canvas
-            ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+            try {
+                // Draw the image on the canvas - ensure proper drawing with correct parameters
+                ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+            } catch (error) {
+                console.error("Error drawing image:", error);
+                // Fallback: draw a placeholder if there's an issue
+                ctx.fillStyle = '#cccccc';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.fillStyle = '#333333';
+                ctx.font = '16px Arial';
+                ctx.fillText("Canvas drawing error", 10, 20);
+            }
         }
         
-        function applyFilterToCanvas(canvasId, filterName) {
+        // This function will be replaced with proper backend integration
+        async function applyFilterToCanvas(canvasId, filterName) {
             const beforeCanvas = document.getElementById('before-canvas');
             const afterCanvas = document.getElementById(canvasId);
             const ctx = afterCanvas.getContext('2d');
             
-            // Get the image data from the before canvas
-            const imageData = beforeCanvas.getContext('2d').getImageData(0, 0, beforeCanvas.width, beforeCanvas.height);
-            
-            // In a real implementation with actual filter logic,
-            // we would process the image data here.
-            // For now, just copy original to show it's working
-            
-            // Draw the original image as an example
-            ctx.drawImage(beforeCanvas, 0, 0);
+            try {
+                // Get image data from the before canvas - ensure proper dimensions
+                const imageData = beforeCanvas.getContext('2d').getImageData(0, 0, beforeCanvas.width, beforeCanvas.height);
+                
+                // Apply filter using backend logic - this is where we'll integrate with Spatial.ts
+                if (filterName === "Gaussian Blur") {
+                    // Call the backend Spatial class to apply Gaussian blur
+                    try {
+                        const result = await window.electronAPI.applySpatialFilter({
+                            imageData: Array.from(imageData.data),
+                            width: imageData.width,
+                            height: imageData.height,
+                            filterName: filterName
+                        });
+                        
+                        if (result && result.data) {
+                            // Create new ImageData from the processed data - ensure proper dimensions
+                            const newData = new ImageData(
+                                Uint8ClampedArray.from(result.data), 
+                                imageData.width, 
+                                imageData.height
+                            );
+                            
+                            // Clear canvas and draw properly with correct parameters
+                            ctx.clearRect(0, 0, afterCanvas.width, afterCanvas.height);
+                            ctx.putImageData(newData, 0, 0);
+                        } else {
+                            console.error("Backend filter returned invalid result");
+                            // Fallback to simple blur if backend fails
+                            ctx.clearRect(0, 0, afterCanvas.width, afterCanvas.height);
+                            ctx.filter = 'blur(2px)';
+                            ctx.drawImage(beforeCanvas, 0, 0, afterCanvas.width, afterCanvas.height);
+                            ctx.filter = 'none';
+                        }
+                    } catch (backendError) {
+                        console.error("Backend error:", backendError);
+                        // Fallback to simple blur if backend fails
+                        ctx.clearRect(0, 0, afterCanvas.width, afterCanvas.height);
+                        ctx.filter = 'blur(2px)';
+                        ctx.drawImage(beforeCanvas, 0, 0, afterCanvas.width, afterCanvas.height);
+                        ctx.filter = 'none';
+                    }
+                } else {
+                    // For other filters or default case, just copy with proper dimensions
+                    ctx.clearRect(0, 0, afterCanvas.width, afterCanvas.height);
+                    ctx.drawImage(beforeCanvas, 0, 0, afterCanvas.width, afterCanvas.height);
+                }
+                
+                console.log("Applied filter:", filterName);
+            } catch (error) {
+                console.error("Error applying filter:", error);
+                // Fallback: draw a placeholder if there's an issue
+                ctx.clearRect(0, 0, afterCanvas.width, afterCanvas.height);
+                ctx.fillStyle = '#cccccc';
+                ctx.fillRect(0, 0, afterCanvas.width, afterCanvas.height);
+                ctx.fillStyle = '#333333';
+                ctx.font = '16px Arial';
+                ctx.fillText("Filter error", 10, 20);
+            }
         }
     </script>
 </body>
