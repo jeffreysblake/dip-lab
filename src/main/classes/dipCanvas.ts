@@ -1,3 +1,9 @@
+/**
+ * Digital Image Processing Canvas Class.
+ * 
+ * This class provides functionality for managing image canvas data
+ * including pixel manipulation, clearing, and data retrieval.
+ */
 import { dipImage } from './dipImage';
 
 export class dipCanvas {

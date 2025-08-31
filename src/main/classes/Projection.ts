@@ -1,5 +1,25 @@
-export class Projection {
-  // Apply horizontal projection
+/**
+ * Image projection analysis for digital image processing.
+ * 
+ * Provides methods to project images along different axes or patterns,
+ * which can be useful for texture analysis, shape detection, and pattern recognition.
+ */
+export default class Projection {
+  /**
+   * Apply horizontal projection to an image.
+   * 
+   * This operation sums pixel values along each row (horizontal direction),
+   * creating a vertical profile of the image's intensity distribution.
+   * 
+   * @param imageData - The raw pixel data as Uint8ClampedArray
+   * @param width - Width of the image in pixels  
+   * @param height - Height of the image in pixels
+   * @returns A new Uint8ClampedArray with horizontal projection applied
+   * @throws Error if input parameters are invalid or dimensions don't match
+   * @example
+   * // Apply horizontal projection to an image
+   * const result = Projection.applyHorizontalProjection(imageData, width, height);
+   */
   static applyHorizontalProjection(imageData: Uint8ClampedArray, width: number, height: number): Uint8ClampedArray {
     const result = new Uint8ClampedArray(width * height * 4);
     
@@ -35,7 +55,21 @@ export class Projection {
     return result;
   }
 
-  // Apply vertical projection  
+  /**
+   * Apply vertical projection to an image.
+   * 
+   * This operation sums pixel values along each column (vertical direction),
+   * creating a horizontal profile of the image's intensity distribution.
+   * 
+   * @param imageData - The raw pixel data as Uint8ClampedArray
+   * @param width - Width of the image in pixels  
+   * @param height - Height of the image in pixels
+   * @returns A new Uint8ClampedArray with vertical projection applied
+   * @throws Error if input parameters are invalid or dimensions don't match
+   * @example
+   * // Apply vertical projection to an image
+   * const result = Projection.applyVerticalProjection(imageData, width, height);
+   */
   static applyVerticalProjection(imageData: Uint8ClampedArray, width: number, height: number): Uint8ClampedArray {
     const result = new Uint8ClampedArray(width * height * 4);
     
@@ -69,7 +103,21 @@ export class Projection {
     return result;
   }
 
-  // Apply radial projection (from center)
+  /**
+   * Apply radial projection to an image from its center.
+   * 
+   * This operation sums pixel values along radial lines extending from the center,
+   * creating a polar representation of the image's intensity distribution.
+   * 
+   * @param imageData - The raw pixel data as Uint8ClampedArray
+   * @param width - Width of the image in pixels  
+   * @param height - Height of the image in pixels
+   * @returns A new Uint8ClampedArray with radial projection applied
+   * @throws Error if input parameters are invalid or dimensions don't match
+   * @example
+   * // Apply radial projection to an image
+   * const result = Projection.applyRadialProjection(imageData, width, height);
+   */
   static applyRadialProjection(imageData: Uint8ClampedArray, width: number, height: number): Uint8ClampedArray {
     const centerX = Math.floor(width / 2);
     const centerY = Math.floor(height / 2);
@@ -117,7 +165,21 @@ export class Projection {
     return result;
   }
 
-  // Apply angular projection (around center)
+  /**
+   * Apply angular projection to an image around its center.
+   * 
+   * This operation sums pixel values along angular lines extending from the center,
+   * creating a representation of the image's intensity distribution in polar coordinates.
+   * 
+   * @param imageData - The raw pixel data as Uint8ClampedArray
+   * @param width - Width of the image in pixels  
+   * @param height - Height of the image in pixels
+   * @returns A new Uint8ClampedArray with angular projection applied
+   * @throws Error if input parameters are invalid or dimensions don't match
+   * @example
+   * // Apply angular projection to an image
+   * const result = Projection.applyAngularProjection(imageData, width, height);
+   */
   static applyAngularProjection(imageData: Uint8ClampedArray, width: number, height: number): Uint8ClampedArray {
     const centerX = Math.floor(width / 2);
     const centerY = Math.floor(height / 2);
@@ -164,7 +226,19 @@ export class Projection {
     return result;
   }
 
-  // Apply custom projection (generic)
+  /**
+   * Apply a custom type of projection to an image.
+   * 
+   * @param imageData - The raw pixel data as Uint8ClampedArray
+   * @param width - Width of the image in pixels  
+   * @param height - Height of the image in pixels
+   * @param projectionType - Type of projection to apply ('horizontal', 'vertical', 'radial', or 'angular')
+   * @returns A new Uint8ClampedArray with custom projection applied
+   * @throws Error if input parameters are invalid or dimensions don't match
+   * @example
+   * // Apply custom projection type
+   * const result = Projection.applyCustomProjection(imageData, width, height, 'horizontal');
+   */
   static applyCustomProjection(imageData: Uint8ClampedArray, width: number, height: number, 
                           projectionType: string): Uint8ClampedArray {
     switch(projectionType) {
@@ -180,13 +254,27 @@ export class Projection {
         // Return original if projection type is not recognized
         const result = new Uint8ClampedArray(width * height * 4);
         for (let i = 0; i < imageData.length; i++) {
-          result[i] = imageData[i] ?? 0
+          result[i] = imageData[i] ?? 0;
         }
         return result;
     }
   }
 
-  // Apply multiple projections in sequence
+  /**
+   * Apply all projection types sequentially to an image.
+   * 
+   * This returns an array containing the results of applying each projection type,
+   * which can be useful for comprehensive analysis or comparison.
+   * 
+   * @param imageData - The raw pixel data as Uint8ClampedArray
+   * @param width - Width of the image in pixels  
+   * @param height - Height of the image in pixels
+   * @returns An array containing the results of all projection types applied to the input image
+   * @throws Error if input parameters are invalid or dimensions don't match
+   * @example
+   * // Apply all projections sequentially
+   * const results = Projection.applyMultipleProjections(imageData, width, height);
+   */
   static applyMultipleProjections(imageData: Uint8ClampedArray, width: number, height: number): Uint8ClampedArray[] {
     const results: Uint8ClampedArray[] = [];
     

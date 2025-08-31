@@ -2,8 +2,8 @@ import { app, BrowserWindow } from 'electron';
 import * as path from 'path';
 import * as fs from 'fs';
 
-// Import Spatial class for backend processing
-import './classes/Spatial'; // This will ensure the class is loaded
+// Import IPC handlers to set up communication with renderer
+import './ipc-handlers';
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 // For ES modules, we need to use dynamic import or remove this line
@@ -18,8 +18,9 @@ const createWindow = () => {
   mainWindow = new BrowserWindow({
     height: 600,
     webPreferences: {
-      nodeIntegration: true,
-      contextIsolation: false
+      nodeIntegration: false,
+      contextIsolation: true,
+      preload: path.join(__dirname, 'preload.js') // Add preload script
     },
     width: 800,
   });

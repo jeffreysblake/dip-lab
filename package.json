@@ -7,16 +7,20 @@
     "start": "electron .",
     "dev": "electron .",
     "build": "tsc -p . && electron-builder",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "jest",
+    "test:coverage": "jest --coverage"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "description": "",
   "devDependencies": {
+    "@types/jest": "^30.0.0",
     "@types/node": "^24.3.0",
     "electron": "^37.4.0",
     "electron-builder": "^26.0.12",
+    "jest": "^30.1.1",
+    "ts-jest": "^29.4.1",
     "typescript": "^5.9.2"
   }
 }

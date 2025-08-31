@@ -8,7 +8,7 @@
     // Environment Settings for Node.js/Electron
     "module": "commonjs",
     "target": "es2020",
-    "types": ["node"],
+    "types": ["node", "jest"],
     
     // For Node.js:
     "lib": ["es2020"],
@@ -48,6 +48,6 @@
   
   "exclude": [
     "node_modules",
-    "**/*.test.ts"
+    "**/coverage/**"
   ]
 }

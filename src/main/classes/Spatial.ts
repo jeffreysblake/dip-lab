@@ -1,16 +1,43 @@
-class Spatial {
-  // Predefined filters as constants for easy access
+/**
+ * Spatial filtering operations for digital image processing.
+ * 
+ * This class provides methods for applying various spatial filters to images,
+ * including convolution-based operations using predefined kernels or custom filters.
+ */
+export default class Spatial {
+  /**
+   * Predefined filters as constants for easy access.
+   * Each filter is represented as a 2D array of numbers.
+   */
   static Filters: { [key: string]: number[][] } = {
-    "Gaussian Blur": [[1, 2, 1], [2, 4, 2], [1, 2, 1]],
-    "Sharpen": [[0, -2, 0], [-2, 11, -2], [0, -2, 0]],
-    "Mean Removal": [[-1, -1, -1], [-1, 9, -1], [-1, -1, -1]],
+    "Gaussian Blur": [
+      [1/273, 4/273, 7/273, 4/273, 1/273], 
+      [4/273, 16/273, 26/273, 16/273, 4/273], 
+      [7/273, 26/273, 41/273, 26/273, 7/273], 
+      [4/273, 16/273, 26/273, 16/273, 4/273], 
+      [1/273, 4/273, 7/273, 4/273, 1/273]
+    ],
+    "Sharpen": [[0, -1, 0], [-1, 5, -1], [0, -1, 0]],
+    "Mean Removal": [[-1/9, -1/9, -1/9], [-1/9, 8/9, -1/9], [-1/9, -1/9, -1/9]],
     "Emboss Laplascian": [[-1, 0, -1], [0, 4, 0], [-1, 0, -1]],
     "Sobel": [[-1, -2, -1], [0, 0, 0], [1, 2, 1]],
     "Edge Detect": [[1, 1, 1], [0, 0, 0], [-1, -1, -1]],
     "Identity": [[0, 0, 0], [0, 1, 0], [0, 0, 0]]
   };
 
-  // Apply custom filter (generic) - this is the default method
+  /**
+   * Apply a custom filter to image data.
+   * 
+   * @param imageData - The raw pixel data as Uint8ClampedArray
+   * @param width - Width of the image in pixels
+   * @param height - Height of the image in pixels
+   * @param kernelName - Name of predefined kernel to apply (e.g. "Gaussian Blur")
+   * @returns A new Uint8ClampedArray with the filter applied
+   * @throws Error if specified kernel is not found
+   * @example
+   * // Apply Gaussian blur filter
+   * const result = Spatial.applyFilter(imageData, width, height, "Gaussian Blur");
+   */
   static applyFilter(imageData: Uint8ClampedArray, width: number, height: number, kernelName: string): Uint8ClampedArray {
     let kernel = this.Filters["Identity"];
 
@@ -23,6 +50,9 @@ class Spatial {
     const kernelSize = kernel.length;
     const halfKernel = Math.floor(kernelSize / 2);
     
+    // Kernels are now pre-normalized, so no additional normalization needed
+    const normalizeFactor = 1;
+    
     const result = new Uint8ClampedArray(imageData.length);
     
     for (let y = 0; y < height; y++) {
@@ -32,10 +62,8 @@ class Spatial {
         // Apply kernel
         for (let ky = 0; ky < kernelSize; ky++) {
           for (let kx = 0; kx < kernelSize; kx++) {
-            const px = 
-            Math.max(0, Math.min(width - 1, x + kx - halfKernel));
-            const py = 
-            Math.max(0, Math.min(height - 1, y + ky - halfKernel));
+            const px = Math.max(0, Math.min(width - 1, x + kx - halfKernel));
+            const py = Math.max(0, Math.min(height - 1, y + ky - halfKernel));
             
             if (px >= 0 && px < width && py >= 0 && py < height) {
               const index = (py * width + px) * 4;
@@ -44,11 +72,12 @@ class Spatial {
               const r = imageData[index] ?? 0;
               const g = imageData[index + 1] ?? 0; 
               const b = imageData[index + 2] ?? 0;
-          
-              // Properly extract kernel value - this was the main bug!
+            
+              // Properly extract kernel value
               let kernelValue = 0;
-              if (kernel && Array.isArray(kernel) && kernel.length > ky && Array.isArray(kernel[ky])) {
-                kernelValue = kernel[ky][kx];
+              if (kernel && Array.isArray(kernel) && ky < kernel.length && Array.isArray(kernel[ky]) && kx < kernel[ky]!.length) {
+                const kernelElement = kernel[ky]![kx];
+                kernelValue = kernelElement !== undefined ? kernelElement : 0;
               }
               
               sumR += r * kernelValue;
@@ -59,19 +88,18 @@ class Spatial {
         }
         
         // Normalize and set pixel
-        const normalizedR = Math.min(255, Math.max(0, sumR));
-        const normalizedG = Math.min(255, Math.max(0, sumG));
-        const normalizedB = Math.min(255, Math.max(0, sumB));
+        const normalizedR = Math.min(255, Math.max(0, sumR / normalizeFactor));
+        const normalizedG = Math.min(255, Math.max(0, sumG / normalizeFactor));
+        const normalizedB = Math.min(255, Math.max(0, sumB / normalizeFactor));
         
         const index = (y * width + x) * 4;
         result[index] = normalizedR;
         result[index + 1] = normalizedG;
         result[index + 2] = normalizedB;
+        result[index + 3] = imageData[index + 3] || 255; // Preserve alpha channel
       }
     }
     
     return result;
   }
 }
-
-export default Spatial;

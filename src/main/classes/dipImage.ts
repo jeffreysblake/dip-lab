@@ -1,8 +1,21 @@
+/**
+ * Digital Image Processing Image Class.
+ * 
+ * This class provides core functionality for handling image data including:
+ * - Pixel manipulation with RGBA support  
+ * - Image dimension management (width/height)
+ * - Data storage using Typed Arrays
+ */
 export class dipImage {
   private _data: Uint8ClampedArray;
   private _width: number;
   private _height: number;
 
+  /**
+   * Create a new image instance
+   * @param width - Width of the image in pixels  
+   * @param height - Height of the image in pixels
+   */
   constructor(width: number, height: number) {
     this._width = width;
     this._height = height;
@@ -10,30 +23,55 @@ export class dipImage {
     this._data = new Uint8ClampedArray(width * height * 4);
   }
 
-  get data(): Uint8ClampedArray {
-    return this._data;
-  }
-
+  /**
+   * Get the width of the image
+   * @returns Width in pixels
+   */
   get width(): number {
     return this._width;
   }
 
+  /**
+   * Get the height of the image  
+   * @returns Height in pixels
+   */
   get height(): number {
     return this._height;
   }
 
-  // Set pixel at x,y with RGBA values
+  /**
+   * Get the raw pixel data array
+   * @returns Uint8ClampedArray containing RGBA values for all pixels
+   */
+  get data(): Uint8ClampedArray {
+    return this._data;
+  }
+
+  /**
+   * Set the color value of a specific pixel.
+   * @param x - X coordinate of the pixel (0-based)
+   * @param y - Y coordinate of the pixel (0-based) 
+   * @param r - Red component value (0-255)
+   * @param g - Green component value (0-255)
+   * @param b - Blue component value (0-255)
+   * @param a - Alpha component value (0-255, default 255)
+   */
   setPixel(x: number, y: number, r: number, g: number, b: number, a: number = 255): void {
     if (x >= 0 && x < this._width && y >= 0 && y < this._height) {
       const index = (y * this._width + x) * 4;
       this._data[index] = r;     // Red
-      this._data[index + 1] = g; // Green
-      this._data[index + 2] = b; // Blue
-      this._data[index + 3] = a; // Alpha
+      this._data[index + 1] = g;   // Green
+      this._data[index + 2] = b;   // Blue
+      this._data[index + 3] = a;   // Alpha
     }
   }
 
-  // Get pixel at x,y as RGBA values
+  /**
+   * Get the color value of a specific pixel.
+   * @param x - X coordinate of the pixel (0-based)
+   * @param y - Y coordinate of the pixel (0-based) 
+   * @returns An array containing [red, green, blue, alpha] values
+   */
   getPixel(x: number, y: number): [number, number, number, number] {
     if (x >= 0 && x < this._width && y >= 0 && y < this._height) {
       const index = (y * this._width + x) * 4;
@@ -47,14 +85,19 @@ export class dipImage {
     return [0, 0, 0, 0];
   }
 
-  // Clear image to black (all zeros)
+  /**
+   * Clear the image data to black (all zeros)
+   */
   clear(): void {
     for (let i = 0; i < this._data.length; i++) {
       this._data[i] = 0;
     }
   }
 
-  // Copy image data
+  /**
+   * Copy pixel data from another dipImage instance
+   * @param other - The source image to copy from
+   */
   copyFrom(other: dipImage): void {
     if (this._width === other.width && this._height === other.height) {
       for (let i = 0; i < this._data.length; i++) {
@@ -63,7 +106,10 @@ export class dipImage {
     }
   }
 
-  // Create a copy of this image
+  /**
+   * Create a copy of this image
+   * @returns A new dipImage instance with identical data
+   */
   clone(): dipImage {
     const newImage = new dipImage(this._width, this._height);
     for (let i = 0; i < this._data.length; i++) {
@@ -72,7 +118,10 @@ export class dipImage {
     return newImage;
   }
 
-  // Convert to grayscale
+  /**
+   * Convert the image to grayscale
+   * @returns A new dipImage instance with grayscale values
+   */
   toGrayscale(): dipImage {
     const grayImage = new dipImage(this._width, this._height);
     for (let y = 0; y < this._height; y++) {
@@ -86,7 +135,11 @@ export class dipImage {
     return grayImage;
   }
 
-  // Apply a simple spatial filter (e.g., averaging)
+  /**
+   * Apply a simple spatial filter to the image
+   * @param filter - A 2D array representing the convolution kernel
+   * @returns A new dipImage instance with the filter applied
+   */
   applySpatialFilter(filter: number[][]): dipImage {
     const kernelSize = filter.length;
     const halfKernel = Math.floor(kernelSize / 2);
@@ -107,10 +160,10 @@ export class dipImage {
 
             if (px >= 0 && px < this._width && py >= 0 && py < this._height) {
               const [r, g, b] = this.getPixel(px, py);
-              const filter_column = filter[ky] ?? [];
-              sumR += r * (filter_column[kx] ?? 0);
-              sumG += g * (filter_column[kx] ?? 0);
-              sumB += b * (filter_column[kx] ?? 0);
+              const filterColumn = filter[ky] ?? [];
+              sumR += r * (filterColumn[kx] ?? 0);
+              sumG += g * (filterColumn[kx] ?? 0);
+              sumB += b * (filterColumn[kx] ?? 0);
             }
           }
         }

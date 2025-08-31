@@ -1,3 +1,10 @@
+/**
+ * Image data handling class for digital image processing.
+ * 
+ * This class provides functionality for managing and manipulating
+ * raw pixel data including setting/getting individual pixels,
+ * copying data, converting to grayscale, and applying spatial filters.
+ */
 export class ImageData {
   private _data: Uint8ClampedArray;
   private _width: number;
@@ -22,7 +29,20 @@ export class ImageData {
     return this._height;
   }
 
-  // Set pixel at x,y with RGBA values
+  /**
+   * Set the color value of a specific pixel.
+   * 
+   * @param x - X coordinate of the pixel (0-based)
+   * @param y - Y coordinate of the pixel (0-based) 
+   * @param r - Red component value (0-255)
+   * @param g - Green component value (0-255)
+   * @param b - Blue component value (0-255)
+   * @param a - Alpha component value (0-255, default 255)
+   * @throws Error if coordinates are out of bounds
+   * @example
+   * // Set pixel at position (10, 20) to red color
+   * imageData.setPixel(10, 20, 255, 0, 0, 255);
+   */
   setPixel(x: number, y: number, r: number, g: number, b: number, a: number = 255): void {
     if (x >= 0 && x < this._width && y >= 0 && y < this._height) {
       const index = (y * this._width + x) * 4;
@@ -33,7 +53,17 @@ export class ImageData {
     }
   }
 
-  // Get pixel at x,y as RGBA values
+  /**
+   * Get the color value of a specific pixel.
+   * 
+   * @param x - X coordinate of the pixel (0-based)
+   * @param y - Y coordinate of the pixel (0-based) 
+   * @returns An array containing [red, green, blue, alpha] values
+   * @throws Error if coordinates are out of bounds
+   * @example
+   * // Get pixel color at position (10, 20)
+   * const [r, g, b, a] = imageData.getPixel(10, 20);
+   */
   getPixel(x: number, y: number): [number, number, number, number] {
     if (x >= 0 && x < this._width && y >= 0 && y < this._height) {
       const index = (y * this._width + x) * 4;
@@ -47,14 +77,29 @@ export class ImageData {
     return [0, 0, 0, 0];
   }
 
-  // Clear image to black (all zeros)
+  /**
+   * Clear the image data to black (all zeros).
+   * 
+   * @throws Error if operation fails
+   * @example
+   * // Clear image data to black
+   * imageData.clear();
+   */
   clear(): void {
     for (let i = 0; i < this._data.length; i++) {
       this._data[i] = 0;
     }
   }
 
-  // Copy image data
+  /**
+   * Copy pixel data from another ImageData instance.
+   * 
+   * @param other - The source image data to copy from
+   * @throws Error if dimensions don't match or operation fails
+   * @example
+   * // Copy image data from another source
+   * imageData.copyFrom(otherImageData);
+   */
   copyFrom(other: ImageData): void {
     if (this._width === other.width && this._height === other.height) {
       for (let i = 0; i < this._data.length; i++) {
@@ -63,7 +108,15 @@ export class ImageData {
     }
   }
 
-  // Create a copy of this image data
+  /**
+   * Create a copy of this image data.
+   * 
+   * @returns A new ImageData instance with identical data
+   * @throws Error if operation fails
+   * @example
+   * // Clone the image data
+   * const clonedData = imageData.clone();
+   */
   clone(): ImageData {
     const newImageData = new ImageData(this._width, this._height);
     for (let i = 0; i < this._data.length; i++) {
@@ -72,7 +125,15 @@ export class ImageData {
     return newImageData;
   }
 
-  // Convert to grayscale
+  /**
+   * Convert the image data to grayscale.
+   * 
+   * @returns A new ImageData instance with grayscale values
+   * @throws Error if operation fails
+   * @example
+   * // Convert image data to grayscale
+   * const grayData = imageData.toGrayscale();
+   */
   toGrayscale(): ImageData {
     const grayImageData = new ImageData(this._width, this._height);
     for (let y = 0; y < this._height; y++) {
@@ -86,7 +147,16 @@ export class ImageData {
     return grayImageData;
   }
 
-  // Apply a simple spatial filter (e.g., averaging)
+  /**
+   * Apply a simple spatial filter to the image data.
+   * 
+   * @param filter - A 2D array representing the convolution kernel
+   * @returns A new ImageData instance with the filter applied
+   * @throws Error if operation fails or invalid parameters
+   * @example
+   * // Apply a Gaussian blur filter
+   * const filteredData = imageData.applySpatialFilter(gaussianKernel);
+   */
   applySpatialFilter(filter: number[][]): ImageData {
     const kernelSize = filter.length;
     const halfKernel = Math.floor(kernelSize / 2);

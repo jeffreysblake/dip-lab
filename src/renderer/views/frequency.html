@@ -21,12 +21,168 @@
             color: #333;
             text-align: center;
         }
+        .controls {
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: #f9f9f9;
+            border-radius: 6px;
+        }
+        .image-container {
+            display: flex;
+            justify-content: space-between;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .image-box {
+            flex: 1;
+            text-align: center;
+        }
+        .image-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        canvas {
+            max-width: 100%;
+            height: auto;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        select {
+            padding: 8px;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+            font-size: 16px;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>Frequency View</h1>
-        <p>This is the Frequency view page.</p>
+        
+        <div class="controls">
+            <label for="filter-select">Select Frequency Filter:</label>
+            <select id="filter-select">
+                <option value="lowpass">Low Pass Filter</option>
+                <option value="highpass">High Pass Filter</option>
+                <option value="bandpass">Band Pass Filter</option>
+            </select>
+        </div>
+
+        <div class="image-container">
+            <div class="image-box">
+                <div class="image-title">Before (Original)</div>
+                <canvas id="before-canvas"></canvas>
+            </div>
+            <div class="image-box">
+                <div class="image-title">After (Filtered)</div>
+                <canvas id="after-canvas"></canvas>
+            </div>
+        </div>
     </div>
+
+    <script>
+        // Load the image and set up canvas
+        const img = new Image();
+        img.crossOrigin = "Anonymous";
+        
+        img.onload = function() {
+            setupCanvas('before-canvas', this);
+            setupCanvas('after-canvas', this);
+            applyFrequencyFilterToCanvas('after-canvas', 'lowpass');
+        };
+        
+        img.onerror = function() {
+            console.error("Failed to load image - check path resolution for Lenna.png");
+            // Create a placeholder if the image fails to load
+            const canvas = document.getElementById('before-canvas');
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = '#cccccc';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#333333';
+            ctx.font = '16px Arial';
+            ctx.fillText("Image failed to load", 10, 20);
+        };
+        
+        // Load image using a direct path that should work in Electron
+        img.src = '../../assets/Lenna.png';
+        console.log('Loading image from: ../../assets/Lenna.png');
+        
+        // Set up filter change event
+        document.getElementById('filter-select').addEventListener('change', function() {
+            const selectedFilter = this.value;
+            applyFrequencyFilterToCanvas('after-canvas', selectedFilter);
+        });
+        
+        function setupCanvas(canvasId, image) {
+            const canvas = document.getElementById(canvasId);
+            const ctx = canvas.getContext('2d');
+            
+            // Set canvas dimensions to match the image
+            canvas.width = image.width;
+            canvas.height = image.height;
+            
+            // Draw the image on the canvas
+            ctx.drawImage(image, 0, 0);
+        }
+        
+        async function applyFrequencyFilterToCanvas(canvasId, filterType) {
+            const beforeCanvas = document.getElementById('before-canvas');
+            const afterCanvas = document.getElementById(canvasId);
+            const ctx = afterCanvas.getContext('2d');
+            
+            try {
+                // Get image data from the before canvas
+                const imageData = beforeCanvas.getContext('2d').getImageData(0, 0, beforeCanvas.width, beforeCanvas.height);
+                
+                // Apply frequency filter using backend logic
+                try {
+                    const result = await window.electronAPI.applyFrequencyFilter({
+                        imageData: Array.from(imageData.data),
+                        width: imageData.width,
+                        height: imageData.height,
+                        filterType: filterType
+                    });
+                    
+                    if (result && result.data) {
+                        // Create new ImageData from the processed data
+                        const newData = new ImageData(
+                            Uint8ClampedArray.from(result.data), 
+                            imageData.width, 
+                            imageData.height
+                        );
+                        
+                        // Clear canvas and draw the processed image
+                        ctx.clearRect(0, 0, afterCanvas.width, afterCanvas.height);
+                        ctx.putImageData(newData, 0, 0);
+                    } else {
+                        console.error("Backend filter returned invalid result");
+                        // Fallback to simple grayscale conversion if backend fails
+                        ctx.clearRect(0, 0, afterCanvas.width, afterCanvas.height);
+                        ctx.filter = 'grayscale(100%)';
+                        ctx.drawImage(beforeCanvas, 0, 0, afterCanvas.width, afterCanvas.height);
+                        ctx.filter = 'none';
+                    }
+                } catch (backendError) {
+                    console.error("Backend error:", backendError);
+                    // Fallback to simple grayscale conversion if backend fails
+                    ctx.clearRect(0, 0, afterCanvas.width, afterCanvas.height);
+                    ctx.filter = 'grayscale(100%)';
+                    ctx.drawImage(beforeCanvas, 0, 0, afterCanvas.width, afterCanvas.height);
+                    ctx.filter = 'none';
+                }
+                
+                console.log("Applied frequency filter:", filterType);
+            } catch (error) {
+                console.error("Error applying frequency filter:", error);
+                // Fallback: draw a placeholder if there's an issue
+                ctx.clearRect(0, 0, afterCanvas.width, afterCanvas.height);
+                ctx.fillStyle = '#cccccc';
+                ctx.fillRect(0, 0, afterCanvas.width, afterCanvas.height);
+                ctx.fillStyle = '#333333';
+                ctx.font = '16px Arial';
+                ctx.fillText("Filter error", 10, 20);
+            }
+        }
+    </script>
 </body>
 </html>

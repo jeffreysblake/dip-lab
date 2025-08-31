@@ -1,5 +1,17 @@
-export class Frequency {
-  // Apply FFT (simplified implementation)
+/**
+ * Frequency domain processing operations for digital image processing.
+ * 
+ * This class provides methods for performing frequency domain analysis and filtering,
+ * including Fast Fourier Transform (FFT) operations, spectral filtering, and spectrum analysis.
+ */
+export default class Frequency {
+  /**
+   * Apply FFT (simplified implementation) to convert spatial data to frequency domain
+   * @param imageData - The raw pixel data as Uint8ClampedArray  
+   * @param width - Width of the image in pixels
+   * @param height - Height of the image in pixels
+   * @returns A Float32Array containing real and imaginary components for each frequency bin
+   */
   static applyFFT(imageData: Uint8ClampedArray, width: number, height: number): Float32Array {
     // This is a simplified version - in practice, you'd use a proper FFT library
     const result = new Float32Array(width * height * 2); // Real and imaginary parts
@@ -41,7 +53,14 @@ export class Frequency {
     return result;
   }
 
-  // Apply low-pass filter in frequency domain
+  /**
+   * Apply low-pass filter in frequency domain
+   * @param imageData - The raw pixel data as Uint8ClampedArray  
+   * @param width - Width of the image in pixels
+   * @param height - Height of the image in pixels
+   * @param cutoff - Cutoff frequency for the filter (default: 1/4 of smallest dimension)
+   * @returns A new Uint8ClampedArray with low-pass filtering applied
+   */
   static applyLowPassFilter(imageData: Uint8ClampedArray, width: number, height: number, cutoff: number): Uint8ClampedArray {
     const fftResult = this.applyFFT(imageData, width, height);
     
@@ -81,7 +100,14 @@ export class Frequency {
     return result;
   }
 
-  // Apply high-pass filter in frequency domain  
+  /**
+   * Apply high-pass filter in frequency domain  
+   * @param imageData - The raw pixel data as Uint8ClampedArray  
+   * @param width - Width of the image in pixels
+   * @param height - Height of the image in pixels
+   * @param cutoff - Cutoff frequency for the filter (default: 1/4 of smallest dimension)
+   * @returns A new Uint8ClampedArray with high-pass filtering applied
+   */
   static applyHighPassFilter(imageData: Uint8ClampedArray, width: number, height: number, cutoff: number): Uint8ClampedArray {
     const fftResult = this.applyFFT(imageData, width, height);
     
@@ -121,7 +147,15 @@ export class Frequency {
     return result;
   }
 
-  // Apply band-pass filter in frequency domain
+  /**
+   * Apply band-pass filter in frequency domain
+   * @param imageData - The raw pixel data as Uint8ClampedArray  
+   * @param width - Width of the image in pixels
+   * @param height - Height of the image in pixels
+   * @param lowCutoff - Lower cutoff frequency for the filter (default: 1/8 of smallest dimension)
+   * @param highCutoff - Upper cutoff frequency for the filter (default: 1/2 of smallest dimension) 
+   * @returns A new Uint8ClampedArray with band-pass filtering applied
+   */
   static applyBandPassFilter(imageData: Uint8ClampedArray, width: number, height: number, lowCutoff: number, highCutoff: number): Uint8ClampedArray {
     const fftResult = this.applyFFT(imageData, width, height);
     
@@ -161,7 +195,14 @@ export class Frequency {
     return result;
   }
 
-  // Apply frequency domain filtering (placeholder)
+  /**
+   * Apply frequency domain filtering with different filter types
+   * @param imageData - The raw pixel data as Uint8ClampedArray  
+   * @param width - Width of the image in pixels
+   * @param height - Height of the image in pixels
+   * @param filterType - Type of filter to apply ('lowpass', 'highpass', 'bandpass')
+   * @returns A new Uint8ClampedArray with frequency domain filtering applied
+   */
   static applyFrequencyFilter(imageData: Uint8ClampedArray, width: number, height: number, filterType: string): Uint8ClampedArray {
     switch(filterType) {
       case 'lowpass':
@@ -176,7 +217,13 @@ export class Frequency {
     }
   }
 
-  // Convert frequency domain data back to spatial domain (simplified)
+  /**
+   * Convert frequency domain data back to spatial domain (simplified inverse FFT)
+   * @param fftData - The frequency domain data as Float32Array  
+   * @param width - Width of the image in pixels
+   * @param height - Height of the image in pixels
+   * @returns A new Uint8ClampedArray with reconstructed spatial domain data
+   */
   static inverseFFT(fftData: Float32Array, width: number, height: number): Uint8ClampedArray {
     const result = new Uint8ClampedArray(width * height * 4);
     
@@ -204,7 +251,13 @@ export class Frequency {
     return result;
   }
 
-  // Apply simple frequency domain processing (placeholder)
+  /**
+   * Apply simple frequency domain processing (placeholder for advanced operations)
+   * @param imageData - The raw pixel data as Uint8ClampedArray  
+   * @param width - Width of the image in pixels
+   * @param height - Height of the image in pixels
+   * @returns A new Uint8ClampedArray with processed frequency domain data
+   */
   static processFrequencyDomain(imageData: Uint8ClampedArray, width: number, height: number): Uint8ClampedArray {
     // This is a placeholder for more complex frequency domain operations
     const grayImage = new Uint8ClampedArray(width * height * 4);
@@ -233,7 +286,13 @@ export class Frequency {
     return grayImage;
   }
 
-  // Apply frequency domain filtering with custom parameters (placeholder)
+  /**
+   * Apply frequency domain filtering with custom parameters (placeholder)
+   * @param imageData - The raw pixel data as Uint8ClampedArray  
+   * @param width - Width of the image in pixels
+   * @param height - Height of the image in pixels
+   * @returns A new Uint8ClampedArray with custom frequency domain filtering applied
+   */
   static applyCustomFrequencyFilter(imageData: Uint8ClampedArray, width: number, height: number): Uint8ClampedArray {
     // This would be a more advanced implementation
     const result = new Uint8ClampedArray(width * height * 4);
@@ -249,7 +308,13 @@ export class Frequency {
     return result;
   }
 
-  // Get frequency spectrum (placeholder)
+  /**
+   * Get frequency spectrum from image data
+   * @param imageData - The raw pixel data as Uint8ClampedArray  
+   * @param width - Width of the image in pixels
+   * @param height - Height of the image in pixels
+   * @returns A Float32Array containing magnitude values for each frequency bin
+   */
   static getFrequencySpectrum(imageData: Uint8ClampedArray, width: number, height: number): Float32Array {
     const fftResult = this.applyFFT(imageData, width, height);
     
@@ -271,7 +336,13 @@ export class Frequency {
     return spectrum;
   }
 
-  // Apply frequency domain convolution (placeholder)
+  /**
+   * Apply frequency domain convolution with a kernel 
+   * @param imageData - The raw pixel data as Uint8ClampedArray  
+   * @param width - Width of the image in pixels
+   * @param height - Height of the image in pixels
+   * @returns A new Uint8ClampedArray with frequency domain convolution applied
+   */
   static applyFrequencyConvolution(imageData: Uint8ClampedArray, width: number, height: number): Uint8ClampedArray {
     const result = new Uint8ClampedArray(width * height * 4);
     // implement passing , kernel: Float32Array and the convolution)
@@ -286,7 +357,13 @@ export class Frequency {
     return result;
   }
 
-  // Apply frequency domain filtering with multiple parameters (placeholder)
+  /**
+   * Apply frequency domain filtering with multiple parameters (placeholder)
+   * @param imageData - The raw pixel data as Uint8ClampedArray  
+   * @param width - Width of the image in pixels
+   * @param height - Height of the image in pixels
+   * @returns A new Uint8ClampedArray with advanced frequency domain filtering applied
+   */
   static applyAdvancedFrequencyFilter(imageData: Uint8ClampedArray, width: number, height: number): Uint8ClampedArray {
     const result = new Uint8ClampedArray(width * height * 4);
     
@@ -301,7 +378,13 @@ export class Frequency {
     return result;
   }
 
-  // Get frequency domain representation (placeholder)
+  /**
+   * Get frequency domain representation of image data 
+   * @param imageData - The raw pixel data as Uint8ClampedArray  
+   * @param width - Width of the image in pixels
+   * @param height - Height of the image in pixels
+   * @returns A Float32Array containing real and imaginary components for each frequency bin
+   */
   static getFrequencyDomainRepresentation(imageData: Uint8ClampedArray, width: number, height: number): Float32Array {
     const fftResult = this.applyFFT(imageData, width, height);
     

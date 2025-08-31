@@ -91,7 +91,8 @@
         
         img.onload = function() {
             setupCanvas('before-canvas', this);
-            applyFilterToCanvas('after-canvas', 'Gaussian Blur');
+            setupCanvas('after-canvas', this);
+            applyFilterToCanvas('after-canvas', 'Edge Detect');
         };
         
         img.onerror = function() {
@@ -106,8 +107,21 @@
             ctx.fillText("Image failed to load", 10, 20);
         };
         
-        // Simple and direct approach for Electron development mode
+        // Load image using a direct path that should work in Electron
         img.src = '../../assets/Lenna.png';
+        console.log('Loading image from: ../../assets/Lenna.png');
+        
+        if (!img.src) {
+            console.error("All asset paths failed - using fallback");
+            // Fallback: create a placeholder image with text
+            const canvas = document.getElementById('before-canvas');
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = '#cccccc';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#333333';
+            ctx.font = '16px Arial';
+            ctx.fillText("Failed to load image", 10, 20);
+        }
         
         // Set up filter change event
         document.getElementById('filter-select').addEventListener('change', function() {
@@ -123,18 +137,8 @@
             canvas.width = image.width;
             canvas.height = image.height;
             
-            try {
-                // Draw the image on the canvas - ensure proper drawing with correct parameters
-                ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
-            } catch (error) {
-                console.error("Error drawing image:", error);
-                // Fallback: draw a placeholder if there's an issue
-                ctx.fillStyle = '#cccccc';
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
-                ctx.fillStyle = '#333333';
-                ctx.font = '16px Arial';
-                ctx.fillText("Canvas drawing error", 10, 20);
-            }
+            // Draw the image on the canvas
+            ctx.drawImage(image, 0, 0);
         }
         
         // This function will be replaced with proper backend integration
@@ -147,46 +151,35 @@
                 // Get image data from the before canvas - ensure proper dimensions
                 const imageData = beforeCanvas.getContext('2d').getImageData(0, 0, beforeCanvas.width, beforeCanvas.height);
                 
-                // Apply filter using backend logic - this is where we'll integrate with Spatial.ts
-                if (filterName === "Gaussian Blur") {
-                    // Call the backend Spatial class to apply Gaussian blur
-                    try {
-                        const result = await window.electronAPI.applySpatialFilter({
-                            imageData: Array.from(imageData.data),
-                            width: imageData.width,
-                            height: imageData.height,
-                            filterName: filterName
-                        });
+                // Apply filter using backend logic - this applies to all filters
+                try {
+                    const result = await window.electronAPI.applySpatialFilter({
+                        imageData: Array.from(imageData.data),
+                        width: imageData.width,
+                        height: imageData.height,
+                        filterName: filterName
+                    });
+                    
+                    if (result && result.data) {
+                        // Create new ImageData from the processed data - ensure proper dimensions
+                        const newData = new ImageData(
+                            Uint8ClampedArray.from(result.data), 
+                            imageData.width, 
+                            imageData.height
+                        );
                         
-                        if (result && result.data) {
-                            // Create new ImageData from the processed data - ensure proper dimensions
-                            const newData = new ImageData(
-                                Uint8ClampedArray.from(result.data), 
-                                imageData.width, 
-                                imageData.height
-                            );
-                            
-                            // Clear canvas and draw properly with correct parameters
-                            ctx.clearRect(0, 0, afterCanvas.width, afterCanvas.height);
-                            ctx.putImageData(newData, 0, 0);
-                        } else {
-                            console.error("Backend filter returned invalid result");
-                            // Fallback to simple blur if backend fails
-                            ctx.clearRect(0, 0, afterCanvas.width, afterCanvas.height);
-                            ctx.filter = 'blur(2px)';
-                            ctx.drawImage(beforeCanvas, 0, 0, afterCanvas.width, afterCanvas.height);
-                            ctx.filter = 'none';
-                        }
-                    } catch (backendError) {
-                        console.error("Backend error:", backendError);
-                        // Fallback to simple blur if backend fails
+                        // Clear canvas and draw properly with correct parameters
                         ctx.clearRect(0, 0, afterCanvas.width, afterCanvas.height);
-                        ctx.filter = 'blur(2px)';
+                        ctx.putImageData(newData, 0, 0);
+                    } else {
+                        console.error("Backend filter returned invalid result");
+                        // Fallback to copying original image if backend fails
+                        ctx.clearRect(0, 0, afterCanvas.width, afterCanvas.height);
                         ctx.drawImage(beforeCanvas, 0, 0, afterCanvas.width, afterCanvas.height);
-                        ctx.filter = 'none';
                     }
-                } else {
-                    // For other filters or default case, just copy with proper dimensions
+                } catch (backendError) {
+                    console.error("Backend error:", backendError);
+                    // Fallback to copying original image if backend fails
                     ctx.clearRect(0, 0, afterCanvas.width, afterCanvas.height);
                     ctx.drawImage(beforeCanvas, 0, 0, afterCanvas.width, afterCanvas.height);
                 }
