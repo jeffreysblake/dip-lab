@@ -100,8 +100,39 @@ ipcMain.handle('get-frequency-domain', async (_, { imageData, width, height }) =
   }
 });
 
+// Set up IPC handlers for frequency domain visualization
+ipcMain.handle('getFrequencyDomain', async (_, { imageData, width, height }) => {
+  try {
+    const imageArray = new Uint8ClampedArray(imageData);
+    
+    const resultData = Frequency.getFrequencyDomainMagnitude(
+      imageArray,
+      width,
+      height
+    );
+    
+    return {
+      success: true,
+      data: Array.from(resultData)
+    };
+  } catch (error) {
+    console.error('Error getting frequency domain:', error);
+    if (error instanceof Error) {
+      return {
+        success: false,
+        error: error.message
+      };
+    } else {
+      return {
+        success: false,
+        error: 'Unknown error'
+      };
+    }
+  }
+});
+
 // Set up IPC handlers for projection analysis
-ipcMain.handle('apply-projection', async (_, { imageData, width, height, projectionType }) => {
+ipcMain.handle('apply-projection', async (_, { imageData, width, height, projectionType, offsetX = 0, offsetY = 0, rotationX = 0, rotationY = 0, rotationZ = 0 }) => {
   try {
     const imageArray = new Uint8ClampedArray(imageData);
     
@@ -109,7 +140,12 @@ ipcMain.handle('apply-projection', async (_, { imageData, width, height, project
       imageArray,
       width,
       height,
-      projectionType
+      projectionType,
+      offsetX,
+      offsetY,
+      rotationX,
+      rotationY,
+      rotationZ
     );
     
     return {

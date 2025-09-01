@@ -40,8 +40,14 @@
   
   /* Background colors */
   --color-background: #f9fafb; /* Gray-50 */
-  --color-card-bg: #f3f4f6; /* Light gray instead of white */
+  --color-card-bg: #ffffff; /* White cards for light mode */
+  --color-panel-bg: #f8fafc; /* Slightly tinted panels */
   --color-overlay: rgba(0, 0, 0, 0.5);
+  
+  /* Sidebar colors */
+  --color-sidebar-bg: #374151; /* Gray-700 */
+  --color-sidebar-text: #f9fafb; /* Gray-50 */
+  --color-sidebar-hover: #4b5563; /* Gray-600 */
 }
 
 /* ==================== */
@@ -157,23 +163,40 @@
 }
 
 /* Form elements */
-.form-control {
+.form-control, select, input[type="text"], input[type="number"] {
   display: block;
   width: 100%;
   padding: var(--spacing-sm);
   font-size: var(--font-size-md);
   line-height: var(--line-height-normal);
   color: var(--color-text);
-  background-color: #f3f4f6; /* Light gray instead of white */
+  background-color: var(--color-card-bg);
   border: 1px solid var(--color-neutral-dark);
   border-radius: var(--component-border-radius);
   margin-bottom: var(--spacing-sm);
 }
 
-.form-control:focus {
+.form-control:focus, select:focus, input:focus {
   outline: none;
   border-color: var(--color-primary);
   box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+/* Labels */
+label {
+  display: block;
+  margin-bottom: var(--spacing-xs);
+  color: var(--color-text);
+  font-weight: 500;
+}
+
+/* Controls section */
+.controls {
+  background-color: var(--color-panel-bg);
+  padding: var(--component-padding);
+  border-radius: var(--component-border-radius);
+  border: 1px solid var(--color-neutral);
+  margin-bottom: var(--component-margin);
 }
 
 /* Layout utilities */
@@ -230,6 +253,118 @@ canvas {
   border-radius: var(--component-border-radius);
 }
 
+/* Projection control styles - compact version */
+.projection-controls {
+  margin-top: var(--spacing-md);
+  padding: var(--spacing-sm);
+  border: 1px solid var(--color-neutral);
+  border-radius: var(--component-border-radius);
+  background-color: var(--color-panel-bg);
+}
+
+.projection-controls h4 {
+  margin: 0 0 var(--spacing-sm) 0;
+  color: var(--color-text);
+  font-size: var(--font-size-md);
+  text-align: center;
+}
+
+.controls-row {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: var(--spacing-lg);
+}
+
+.position-group, .rotation-group {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.position-group label, .rotation-group label {
+  font-weight: bold;
+  font-size: var(--font-size-sm);
+  color: var(--color-text);
+  margin: 0;
+}
+
+.position-controls {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.position-controls > div {
+  display: flex;
+  gap: 2px;
+}
+
+.position-controls button {
+  width: 24px;
+  height: 24px;
+  font-size: var(--font-size-sm);
+  font-weight: bold;
+  background-color: var(--color-primary);
+  color: white;
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+}
+
+.position-controls button:hover {
+  background-color: var(--color-primary-dark);
+  transform: scale(1.1);
+}
+
+.rotation-controls {
+  display: flex;
+  gap: var(--spacing-sm);
+}
+
+.rotation-axis {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.rotation-axis span:first-child {
+  width: 12px;
+  font-weight: bold;
+  font-size: var(--font-size-xs);
+  color: var(--color-text);
+}
+
+.rotation-axis button {
+  width: 20px;
+  height: 20px;
+  font-size: 10px;
+  background-color: var(--color-secondary);
+  color: white;
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+}
+
+.rotation-axis button:hover {
+  background-color: var(--color-secondary-dark);
+  transform: scale(1.1);
+}
+
+.rotation-axis span:last-of-type {
+  width: 28px;
+  text-align: center;
+  font-size: var(--font-size-xs);
+  color: var(--color-text);
+  background-color: var(--color-card-bg);
+  padding: 2px;
+  border-radius: 3px;
+  border: 1px solid var(--color-neutral);
+}
+
 /* Responsive design */
 @media (max-width: 768px) {
   .container {
@@ -266,14 +401,63 @@ canvas {
 /* Dark mode support */
 @media (prefers-color-scheme: dark) {
   :root {
-    --color-background: #111827; /* Gray-900 */
-    --color-card-bg: #1f2937; /* Gray-800 */
-    --color-text: #f9fafb; /* Gray-50 */
-    --color-text-light: #d1d5db; /* Gray-200 */
+    /* Dark backgrounds */
+    --color-background: #0f172a; /* Slate-900 */
+    --color-card-bg: #1e293b; /* Slate-800 */
+    --color-panel-bg: #334155; /* Slate-700 */
+    
+    /* Dark text colors */
+    --color-text: #f8fafc; /* Slate-50 */
+    --color-text-light: #cbd5e1; /* Slate-300 */
+    
+    /* Dark neutral colors */
+    --color-neutral-light: #475569; /* Slate-600 */
+    --color-neutral: #64748b; /* Slate-500 */
+    --color-neutral-dark: #475569; /* Slate-600 */
+    --color-neutral-darker: #334155; /* Slate-700 */
+    
+    /* Dark sidebar colors */
+    --color-sidebar-bg: #1e293b; /* Slate-800 */
+    --color-sidebar-text: #f8fafc; /* Slate-50 */
+    --color-sidebar-hover: #334155; /* Slate-700 */
+    
+    /* Adjust primary colors for dark mode */
+    --color-primary: #3b82f6; /* Blue-500 */
+    --color-primary-dark: #2563eb; /* Blue-600 */
+    --color-primary-light: #60a5fa; /* Blue-400 */
+    
+    /* Dark overlay */
+    --color-overlay: rgba(0, 0, 0, 0.8);
+    
+    /* Adjust shadows for dark mode */
+    --component-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
   }
   
   .card {
     background-color: var(--color-card-bg);
+    border: 1px solid var(--color-neutral-dark);
+  }
+  
+  /* Enhanced form controls for dark mode */
+  .form-control, select, input[type="text"], input[type="number"] {
+    background-color: var(--color-panel-bg);
+    border-color: var(--color-neutral-dark);
+    color: var(--color-text);
+  }
+  
+  .form-control:focus, select:focus, input:focus {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  }
+  
+  /* Controls section in dark mode */
+  .controls {
+    background-color: var(--color-panel-bg);
+    border-color: var(--color-neutral-dark);
+  }
+  
+  /* Canvas styling in dark mode */
+  canvas {
     border: 1px solid var(--color-neutral-dark);
   }
 }

@@ -232,9 +232,16 @@ export default class Projection {
    * @param imageData - The raw pixel data as Uint8ClampedArray
    * @param width - Width of the image in pixels  
    * @param height - Height of the image in pixels
+   * @param offsetX - X offset for positioning (default: 0)
+   * @param offsetY - Y offset for positioning (default: 0)
+   * @param rotationX - X-axis rotation in degrees (default: 0)
+   * @param rotationY - Y-axis rotation in degrees (default: 0)
+   * @param rotationZ - Z-axis rotation in degrees (default: 0)
    * @returns A new Uint8ClampedArray with isometric projection applied
    */
-  static applyIsometricProjection(imageData: Uint8ClampedArray, width: number, height: number): Uint8ClampedArray {
+  static applyIsometricProjection(imageData: Uint8ClampedArray, width: number, height: number, 
+                                  offsetX: number = 0, offsetY: number = 0,
+                                  rotationX: number = 0, rotationY: number = 0, rotationZ: number = 0): Uint8ClampedArray {
     const result = new Uint8ClampedArray(width * height * 4);
     
     // Fill with background
@@ -249,8 +256,13 @@ export default class Projection {
     const scaleX = 0.5;
     const scaleY = 0.3;
     const heightScale = 0.2;
-    const offsetX = width * 0.2;
-    const offsetY = height * 0.1;
+    const baseOffsetX = width * 0.2 + offsetX;
+    const baseOffsetY = height * 0.1 + offsetY;
+    
+    // Convert rotation angles from degrees to radians
+    const rotX = (rotationX * Math.PI) / 180;
+    const rotY = (rotationY * Math.PI) / 180;
+    const rotZ = (rotationZ * Math.PI) / 180;
     
     // Sample every 4th pixel for performance
     for (let y = 0; y < height; y += 4) {
@@ -264,9 +276,32 @@ export default class Projection {
         const brightness = (0.299 * r + 0.587 * g + 0.114 * b);
         const heightOffset = brightness * heightScale;
         
-        // Isometric transformation
-        const isoX = Math.floor((x - y) * scaleX + offsetX);
-        const isoY = Math.floor((x + y) * scaleY + offsetY - heightOffset);
+        // Apply 3D rotations to the point (x, y, heightOffset)
+        let x3d = x - width / 2;
+        let y3d = y - height / 2;
+        let z3d = heightOffset;
+        
+        // Rotation around X-axis
+        let newY3d = y3d * Math.cos(rotX) - z3d * Math.sin(rotX);
+        let newZ3d = y3d * Math.sin(rotX) + z3d * Math.cos(rotX);
+        y3d = newY3d;
+        z3d = newZ3d;
+        
+        // Rotation around Y-axis
+        let newX3d = x3d * Math.cos(rotY) + z3d * Math.sin(rotY);
+        newZ3d = -x3d * Math.sin(rotY) + z3d * Math.cos(rotY);
+        x3d = newX3d;
+        z3d = newZ3d;
+        
+        // Rotation around Z-axis
+        newX3d = x3d * Math.cos(rotZ) - y3d * Math.sin(rotZ);
+        newY3d = x3d * Math.sin(rotZ) + y3d * Math.cos(rotZ);
+        x3d = newX3d;
+        y3d = newY3d;
+        
+        // Apply isometric projection after rotation
+        const isoX = Math.floor((x3d - y3d) * scaleX + baseOffsetX);
+        const isoY = Math.floor((x3d + y3d) * scaleY + baseOffsetY - z3d);
         
         if (isoX >= 0 && isoX < width && isoY >= 0 && isoY < height) {
           const destIndex = (isoY * width + isoX) * 4;
@@ -291,6 +326,11 @@ export default class Projection {
    * @param width - Width of the image in pixels  
    * @param height - Height of the image in pixels
    * @param projectionType - Type of projection to apply
+   * @param offsetX - X offset for positioning (default: 0)
+   * @param offsetY - Y offset for positioning (default: 0)
+   * @param rotationX - X-axis rotation in degrees (default: 0)
+   * @param rotationY - Y-axis rotation in degrees (default: 0)
+   * @param rotationZ - Z-axis rotation in degrees (default: 0)
    * @returns A new Uint8ClampedArray with custom projection applied
    * @throws Error if input parameters are invalid or dimensions don't match
    * @example
@@ -298,10 +338,11 @@ export default class Projection {
    * const result = Projection.applyCustomProjection(imageData, width, height, 'horizontal');
    */
   static applyCustomProjection(imageData: Uint8ClampedArray, width: number, height: number, 
-                          projectionType: string): Uint8ClampedArray {
+                          projectionType: string, offsetX: number = 0, offsetY: number = 0,
+                          rotationX: number = 0, rotationY: number = 0, rotationZ: number = 0): Uint8ClampedArray {
     switch(projectionType) {
       case 'isometric':
-        return this.applyIsometricProjection(imageData, width, height);
+        return this.applyIsometricProjection(imageData, width, height, offsetX, offsetY, rotationX, rotationY, rotationZ);
       case 'horizontal':
         return this.applyHorizontalProjection(imageData, width, height);
       case 'vertical':  

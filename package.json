@@ -5,7 +5,7 @@
   "type": "commonjs",
   "scripts": {
     "start": "electron .",
-    "dev": "electron .",
+    "dev": "electron . --no-sandbox",
     "build": "tsc -p . && electron-builder",
     "test": "jest",
     "test:coverage": "jest --coverage"

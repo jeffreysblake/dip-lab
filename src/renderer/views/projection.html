@@ -9,17 +9,6 @@
     <div class="container">
         <h1>Projection View</h1>
         
-        <div class="controls">
-            <label for="projection-select">Select Projection Type:</label>
-            <select id="projection-select">
-                <option value="isometric" selected>Isometric 2.5D View</option>
-                <option value="horizontal">Horizontal Projection</option>
-                <option value="vertical">Vertical Projection</option>
-                <option value="radial">Radial Projection</option>
-                <option value="angular">Angular Projection</option>
-            </select>
-        </div>
-
         <div class="image-container">
             <div class="image-box">
                 <div class="image-title">Before (Original)</div>
@@ -28,6 +17,48 @@
             <div class="image-box">
                 <div class="image-title">After (Projected)</div>
                 <canvas id="after-canvas"></canvas>
+            </div>
+        </div>
+
+        <div class="projection-controls">
+            <h4>Isometric 2.5D Projection Controls</h4>
+            
+            <div class="controls-row">
+                <div class="position-group">
+                    <label>Position:</label>
+                    <div class="position-controls">
+                        <button id="move-up">↑</button>
+                        <div>
+                            <button id="move-left">←</button>
+                            <button id="move-right">→</button>
+                        </div>
+                        <button id="move-down">↓</button>
+                    </div>
+                </div>
+                
+                <div class="rotation-group">
+                    <label>Rotation:</label>
+                    <div class="rotation-controls">
+                        <div class="rotation-axis">
+                            <span>X:</span>
+                            <button id="rotate-x-back">◀</button>
+                            <span id="x-value">0°</span>
+                            <button id="rotate-x-forward">▶</button>
+                        </div>
+                        <div class="rotation-axis">
+                            <span>Y:</span>
+                            <button id="rotate-y-back">◀</button>
+                            <span id="y-value">0°</span>
+                            <button id="rotate-y-forward">▶</button>
+                        </div>
+                        <div class="rotation-axis">
+                            <span>Z:</span>
+                            <button id="rotate-z-back">◀</button>
+                            <span id="z-value">0°</span>
+                            <button id="rotate-z-forward">▶</button>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -40,7 +71,7 @@
         img.onload = function() {
             setupCanvas('before-canvas', this);
             setupCanvas('after-canvas', this);
-            applyProjectionToCanvas('after-canvas', 'isometric');
+            updateProjection();
         };
         
         img.onerror = function() {
@@ -59,10 +90,71 @@
         img.src = '../../assets/Lenna.png';
         console.log('Loading image from: ../../assets/Lenna.png');
         
-        // Set up projection change event
-        document.getElementById('projection-select').addEventListener('change', function() {
-            const selectedProjection = this.value;
-            applyProjectionToCanvas('after-canvas', selectedProjection);
+        // Projection state variables
+        let projectionState = {
+            offsetX: 0,
+            offsetY: 0,
+            rotationX: 0,
+            rotationY: 0,
+            rotationZ: 0
+        };
+
+        // Set up control event listeners
+        document.getElementById('move-up').addEventListener('click', () => {
+            projectionState.offsetY -= 10;
+            updateProjection();
+        });
+        
+        document.getElementById('move-down').addEventListener('click', () => {
+            projectionState.offsetY += 10;
+            updateProjection();
+        });
+        
+        document.getElementById('move-left').addEventListener('click', () => {
+            projectionState.offsetX -= 10;
+            updateProjection();
+        });
+        
+        document.getElementById('move-right').addEventListener('click', () => {
+            projectionState.offsetX += 10;
+            updateProjection();
+        });
+        
+        // Rotation buttons
+        document.getElementById('rotate-x-back').addEventListener('click', () => {
+            projectionState.rotationX = (projectionState.rotationX - 15) % 360;
+            document.getElementById('x-value').textContent = projectionState.rotationX + '°';
+            updateProjection();
+        });
+        
+        document.getElementById('rotate-x-forward').addEventListener('click', () => {
+            projectionState.rotationX = (projectionState.rotationX + 15) % 360;
+            document.getElementById('x-value').textContent = projectionState.rotationX + '°';
+            updateProjection();
+        });
+        
+        document.getElementById('rotate-y-back').addEventListener('click', () => {
+            projectionState.rotationY = (projectionState.rotationY - 15) % 360;
+            document.getElementById('y-value').textContent = projectionState.rotationY + '°';
+            updateProjection();
+        });
+        
+        document.getElementById('rotate-y-forward').addEventListener('click', () => {
+            projectionState.rotationY = (projectionState.rotationY + 15) % 360;
+            document.getElementById('y-value').textContent = projectionState.rotationY + '°';
+            updateProjection();
+        });
+        
+        document.getElementById('rotate-z-back').addEventListener('click', () => {
+            projectionState.rotationZ = (projectionState.rotationZ - 15) % 360;
+            document.getElementById('z-value').textContent = projectionState.rotationZ + '°';
+            updateProjection();
+        });
+        
+        document.getElementById('rotate-z-forward').addEventListener('click', () => {
+            projectionState.rotationZ = (projectionState.rotationZ + 15) % 360;
+            document.getElementById('z-value').textContent = projectionState.rotationZ + '°';
+            updateProjection();
         });
         
         function setupCanvas(canvasId, image) {
@@ -77,7 +169,11 @@
             ctx.drawImage(image, 0, 0);
         }
         
-        async function applyProjectionToCanvas(canvasId, projectionType) {
+        function updateProjection() {
+            applyProjectionToCanvas('after-canvas');
+        }
+
+        async function applyProjectionToCanvas(canvasId) {
             const beforeCanvas = document.getElementById('before-canvas');
             const afterCanvas = document.getElementById(canvasId);
             const ctx = afterCanvas.getContext('2d');
@@ -86,13 +182,18 @@
                 // Get image data from the before canvas
                 const imageData = beforeCanvas.getContext('2d').getImageData(0, 0, beforeCanvas.width, beforeCanvas.height);
                 
-                // Apply projection using backend logic
+                // Apply isometric projection using backend logic with current state
                 try {
                     const result = await window.electronAPI.applyProjection({
                         imageData: Array.from(imageData.data),
                         width: imageData.width,
                         height: imageData.height,
-                        projectionType: projectionType
+                        projectionType: 'isometric',
+                        offsetX: projectionState.offsetX,
+                        offsetY: projectionState.offsetY,
+                        rotationX: projectionState.rotationX,
+                        rotationY: projectionState.rotationY,
+                        rotationZ: projectionState.rotationZ
                     });
                     
                     if (result && result.data) {
@@ -131,7 +232,7 @@
                     ctx.setTransform(1, 0, 0, 1, 0, 0); // Reset transform
                 }
                 
-                console.log("Applied projection:", projectionType);
+                console.log("Applied isometric projection with state:", projectionState);
             } catch (error) {
                 console.error("Error applying projection:", error);
                 // Fallback: draw a placeholder if there's an issue

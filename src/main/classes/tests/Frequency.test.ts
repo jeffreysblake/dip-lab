@@ -325,6 +325,56 @@ describe('Frequency', () => {
     });
   });
 
+  describe('getFrequencyDomainMagnitude', () => {
+    it('should get frequency domain magnitude visualization correctly', () => {
+      const width = 4;
+      const height = 4;
+      const imageData = new Uint8ClampedArray(64); // 16 pixels * 4 channels
+      
+      // Fill with test data
+      for (let i = 0; i < 64; i += 4) {
+        imageData[i] = 128; imageData[i + 1] = 128; imageData[i + 2] = 128; imageData[i + 3] = 255;
+      }
+
+      const result = Frequency.getFrequencyDomainMagnitude(imageData, width, height);
+      
+      expect(result).toBeInstanceOf(Uint8ClampedArray);
+      expect(result.length).toBe(64); // Same length as input
+    });
+
+    it('should return proper magnitude visualization with log-shifted plot', () => {
+      const width = 2;
+      const height = 2;
+      const imageData = new Uint8ClampedArray(16); // 4 pixels * 4 channels
+      
+      // Set some test values
+      imageData[0] = 255; imageData[1] = 0;   imageData[2] = 0;   imageData[3] = 255;
+      imageData[4] = 0;   imageData[5] = 255; imageData[6] = 0;   imageData[7] = 255;
+      imageData[8] = 0;   imageData[9] = 0;   imageData[10] = 255; imageData[11] = 255;
+      imageData[12] = 128; imageData[13] = 128; imageData[14] = 128; imageData[15] = 255;
+
+      const result = Frequency.getFrequencyDomainMagnitude(imageData, width, height);
+      
+      expect(result).toBeInstanceOf(Uint8ClampedArray);
+      expect(result.length).toBe(16); // Same length as input
+      // Verify alpha channel is preserved
+      for (let i = 3; i < result.length; i += 4) {
+        expect(result[i]).toBe(255);
+      }
+    });
+
+    it('should handle edge cases gracefully', () => {
+      const width = 1;
+      const height = 1;
+      const imageData = new Uint8ClampedArray(4); // Single pixel
+      
+      // Should not crash with minimal data
+      expect(() => {
+        Frequency.getFrequencyDomainMagnitude(imageData, width, height);
+      }).not.toThrow();
+    });
+  });
+
   describe('Edge cases and error handling', () => {
     it('should handle invalid inputs gracefully', () => {
       const width = 1;
@@ -337,6 +387,7 @@ describe('Frequency', () => {
         Frequency.applyLowPassFilter(imageData, width, height, 1);
         Frequency.applyHighPassFilter(imageData, width, height, 1);
         Frequency.applyBandPassFilter(imageData, width, height, 0.1, 0.9);
+        Frequency.getFrequencyDomainMagnitude(imageData, width, height);
       }).not.toThrow();
     });
     
@@ -351,7 +402,35 @@ describe('Frequency', () => {
         Frequency.applyLowPassFilter(imageData, width, height, 1);
         Frequency.applyHighPassFilter(imageData, width, height, 1);
         Frequency.applyBandPassFilter(imageData, width, height, 0.1, 0.9);
+        Frequency.getFrequencyDomainMagnitude(imageData, width, height);
       }).not.toThrow();
+    });
+
+    it('should verify frequency filters now return magnitude visualizations', () => {
+      const width = 4;
+      const height = 4;
+      const imageData = new Uint8ClampedArray(64); // 16 pixels * 4 channels
+      
+      // Fill with test data
+      for (let i = 0; i < 64; i += 4) {
+        imageData[i] = 100; imageData[i + 1] = 150; imageData[i + 2] = 200; imageData[i + 3] = 255;
+      }
+
+      // All filters should return magnitude visualization (Uint8ClampedArray)
+      const lowPass = Frequency.applyLowPassFilter(imageData, width, height, 2);
+      const highPass = Frequency.applyHighPassFilter(imageData, width, height, 2);  
+      const bandPass = Frequency.applyBandPassFilter(imageData, width, height, 1, 3);
+      const magnitude = Frequency.getFrequencyDomainMagnitude(imageData, width, height);
+      
+      expect(lowPass).toBeInstanceOf(Uint8ClampedArray);
+      expect(highPass).toBeInstanceOf(Uint8ClampedArray);
+      expect(bandPass).toBeInstanceOf(Uint8ClampedArray);
+      expect(magnitude).toBeInstanceOf(Uint8ClampedArray);
+      
+      expect(lowPass.length).toBe(64);
+      expect(highPass.length).toBe(64);
+      expect(bandPass.length).toBe(64);
+      expect(magnitude.length).toBe(64);
     });
   });
 });

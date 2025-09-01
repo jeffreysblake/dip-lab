@@ -10,12 +10,12 @@
         <h1>Frequency View</h1>
         
         <div class="controls">
-            <label for="filter-select">Select Frequency Filter:</label>
-            <select id="filter-select">
-                <option value="identity" selected>Identity (FFT Magnitude)</option>
-                <option value="lowpass">Low Pass Filter</option>
-                <option value="highpass">High Pass Filter</option>
-                <option value="bandpass">Band Pass Filter</option>
+            <label for="image-select">Select Image:</label>
+            <select id="image-select">
+                <option value="../../assets/Lenna.png" selected>Lenna</option>
+                <option value="../../assets/LennaBlur.png">Lenna (Blurred)</option>
+                <option value="../../assets/clown256.jpg">Clown 256</option>
+                <option value="../../assets/cat.jpg">Cat</option>
             </select>
         </div>
 
@@ -25,7 +25,7 @@
                 <canvas id="before-canvas"></canvas>
             </div>
             <div class="image-box">
-                <div class="image-title">Frequency Domain (FFT Magnitude)</div>
+                <div class="image-title">Frequency Domain (Log-Shifted Magnitude)</div>
                 <canvas id="after-canvas"></canvas>
             </div>
         </div>
@@ -36,36 +36,41 @@
         const img = new Image();
         img.crossOrigin = "Anonymous";
         
-        img.onload = function() {
-            setupCanvas('before-canvas', this);
-            displayFrequencyDomain('after-canvas');
-        };
-        
-        img.onerror = function() {
-            console.error("Failed to load image - check path resolution for Lenna.png");
-            // Create a placeholder if the image fails to load
-            const canvas = document.getElementById('before-canvas');
-            const ctx = canvas.getContext('2d');
-            ctx.fillStyle = '#cccccc';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-            ctx.fillStyle = '#333333';
-            ctx.font = '16px Arial';
-            ctx.fillText("Image failed to load", 10, 20);
-        };
-        
-        // Load image using a direct path that should work in Electron
-        img.src = '../../assets/Lenna.png';
-        console.log('Loading image from: ../../assets/Lenna.png');
-        
-        // Set up filter change event
-        document.getElementById('filter-select').addEventListener('change', function() {
-            const selectedFilter = this.value;
-            if (selectedFilter === 'identity') {
+        // Function to load a specific image based on selection
+        function loadImage(src) {
+            console.log('Loading image from:', src);
+            
+            img.onload = function() {
+                setupCanvas('before-canvas', this);
                 displayFrequencyDomain('after-canvas');
-            } else {
-                displayFilteredFrequencyDomain('after-canvas', selectedFilter);
-            }
+            };
+            
+            img.onerror = function() {
+                console.error("Failed to load image - check path resolution for:", src);
+                // Create a placeholder if the image fails to load
+                const canvas = document.getElementById('before-canvas');
+                const ctx = canvas.getContext('2d');
+                ctx.fillStyle = '#cccccc';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.fillStyle = '#333333';
+                ctx.font = '16px Arial';
+                ctx.fillText("Image failed to load", 10, 20);
+            };
+            
+            // Load image using the provided path
+            img.src = src;
+        }
+        
+        // Initial load with default Lenna.png
+        loadImage('../../assets/Lenna.png');
+        
+        // Set up image selection change event
+        document.getElementById('image-select').addEventListener('change', function() {
+            const selectedImage = this.value;
+            loadImage(selectedImage);
         });
+        
+        // Remove filter change event as we only show magnitude now
         
         function setupCanvas(canvasId, image) {
             const canvas = document.getElementById(canvasId);

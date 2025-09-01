@@ -84,18 +84,18 @@ export default class Frequency {
   }
 
   /**
-   * Apply low-pass filter in frequency domain
+   * Apply low-pass filter in frequency domain and return magnitude visualization
    * @param imageData - The raw pixel data as Uint8ClampedArray  
    * @param width - Width of the image in pixels
    * @param height - Height of the image in pixels
    * @param cutoff - Cutoff frequency for the filter (default: 1/4 of smallest dimension)
-   * @returns A new Uint8ClampedArray with low-pass filtering applied
+   * @returns A new Uint8ClampedArray with filtered frequency domain magnitude visualization
    */
   static applyLowPassFilter(imageData: Uint8ClampedArray, width: number, height: number, cutoff: number): Uint8ClampedArray {
     const fftResult = this.applyFFT(imageData, width, height);
     
-    // Create a simple low-pass filter (simplified)
-    const result = new Uint8ClampedArray(width * height * 4); // RGBA
+    // Apply low-pass filter in frequency domain
+    const filteredFFT = new Float32Array(width * height * 2);
     
     for (let i = 0; i < width * height; i++) {
       const x = i % width;
@@ -107,39 +107,33 @@ export default class Frequency {
       const dist = Math.sqrt((x - centerX) ** 2 + (y - centerY) ** 2);
       
       if (dist <= cutoff) {
-        // Keep the frequency domain data
-        const realPart = fftResult[i * 2] || 0;
-        const imagPart = fftResult[i * 2 + 1] || 0;
-        
-        result[i * 4] = realPart;     // Red channel
-        result[i * 4 + 1] = imagPart; // Green channel  
-        result[i * 4 + 2] = realPart; // Blue channel
+        // Keep the frequency domain data (low frequencies)
+        filteredFFT[i * 2] = fftResult[i * 2] || 0;
+        filteredFFT[i * 2 + 1] = fftResult[i * 2 + 1] || 0;
       } else {
-        // Zero out high frequencies (filtering)
-        result[i * 4] = 0;
-        result[i * 4 + 1] = 0; 
-        result[i * 4 + 2] = 0;
+        // Zero out high frequencies
+        filteredFFT[i * 2] = 0;
+        filteredFFT[i * 2 + 1] = 0;
       }
-
-      result[i * 4 + 3] = imageData[i * 4 + 3] || 255; // Keep alpha
     }
     
-    return result;
+    // Convert filtered frequency domain to visual magnitude representation
+    return this.inverseFFT(filteredFFT, width, height);
   }
 
   /**
-   * Apply high-pass filter in frequency domain  
+   * Apply high-pass filter in frequency domain and return magnitude visualization
    * @param imageData - The raw pixel data as Uint8ClampedArray  
    * @param width - Width of the image in pixels
    * @param height - Height of the image in pixels
    * @param cutoff - Cutoff frequency for the filter (default: 1/4 of smallest dimension)
-   * @returns A new Uint8ClampedArray with high-pass filtering applied
+   * @returns A new Uint8ClampedArray with filtered frequency domain magnitude visualization
    */
   static applyHighPassFilter(imageData: Uint8ClampedArray, width: number, height: number, cutoff: number): Uint8ClampedArray {
     const fftResult = this.applyFFT(imageData, width, height);
     
-    // Create a simple high-pass filter (simplified)
-    const result = new Uint8ClampedArray(width * height * 4); // RGBA
+    // Apply high-pass filter in frequency domain
+    const filteredFFT = new Float32Array(width * height * 2);
     
     for (let i = 0; i < width * height; i++) {
       const x = i % width;
@@ -151,40 +145,34 @@ export default class Frequency {
       const dist = Math.sqrt((x - centerX) ** 2 + (y - centerY) ** 2);
       
       if (dist > cutoff) {
-        // Keep the high frequencies
-        const realPart = fftResult[i * 2] || 0;
-        const imagPart = fftResult[i * 2 + 1] || 0;
-        
-        result[i * 4] = realPart;     // Red channel
-        result[i * 4 + 1] = imagPart; // Green channel  
-        result[i * 4 + 2] = realPart; // Blue channel
+        // Keep the frequency domain data (high frequencies)
+        filteredFFT[i * 2] = fftResult[i * 2] || 0;
+        filteredFFT[i * 2 + 1] = fftResult[i * 2 + 1] || 0;
       } else {
-        // Zero out low frequencies (filtering)
-        result[i * 4] = 0;
-        result[i * 4 + 1] = 0; 
-        result[i * 4 + 2] = 0;
+        // Zero out low frequencies
+        filteredFFT[i * 2] = 0;
+        filteredFFT[i * 2 + 1] = 0;
       }
-
-      result[i * 4 + 3] = imageData[i * 4 + 3] || 255; // Keep alpha
     }
     
-    return result;
+    // Convert filtered frequency domain to visual magnitude representation
+    return this.inverseFFT(filteredFFT, width, height);
   }
 
   /**
-   * Apply band-pass filter in frequency domain
+   * Apply band-pass filter in frequency domain and return magnitude visualization
    * @param imageData - The raw pixel data as Uint8ClampedArray  
    * @param width - Width of the image in pixels
    * @param height - Height of the image in pixels
    * @param lowCutoff - Lower cutoff frequency for the filter (default: 1/8 of smallest dimension)
    * @param highCutoff - Upper cutoff frequency for the filter (default: 1/2 of smallest dimension) 
-   * @returns A new Uint8ClampedArray with band-pass filtering applied
+   * @returns A new Uint8ClampedArray with filtered frequency domain magnitude visualization
    */
   static applyBandPassFilter(imageData: Uint8ClampedArray, width: number, height: number, lowCutoff: number, highCutoff: number): Uint8ClampedArray {
     const fftResult = this.applyFFT(imageData, width, height);
     
-    // Create a simple band-pass filter (simplified)
-    const result = new Uint8ClampedArray(width * height * 4); // RGBA
+    // Apply band-pass filter in frequency domain
+    const filteredFFT = new Float32Array(width * height * 2);
     
     for (let i = 0; i < width * height; i++) {
       const x = i % width;
@@ -196,24 +184,18 @@ export default class Frequency {
       const dist = Math.sqrt((x - centerX) ** 2 + (y - centerY) ** 2);
       
       if (dist >= lowCutoff && dist <= highCutoff) {
-        // Keep the band frequencies
-        const realPart = fftResult[i * 2] || 0;
-        const imagPart = fftResult[i * 2 + 1] || 0;
-        
-        result[i * 4] = realPart;     // Red channel
-        result[i * 4 + 1] = imagPart; // Green channel  
-        result[i * 4 + 2] = realPart; // Blue channel
+        // Keep the frequency domain data (band frequencies)
+        filteredFFT[i * 2] = fftResult[i * 2] || 0;
+        filteredFFT[i * 2 + 1] = fftResult[i * 2 + 1] || 0;
       } else {
         // Zero out frequencies outside the band
-        result[i * 4] = 0;
-        result[i * 4 + 1] = 0; 
-        result[i * 4 + 2] = 0;
+        filteredFFT[i * 2] = 0;
+        filteredFFT[i * 2 + 1] = 0;
       }
-
-      result[i * 4 + 3] = imageData[i * 4 + 3] || 255; // Keep alpha
     }
     
-    return result;
+    // Convert filtered frequency domain to visual magnitude representation
+    return this.inverseFFT(filteredFFT, width, height);
   }
 
   /**
@@ -264,15 +246,19 @@ export default class Frequency {
       maxMagnitude = Math.max(maxMagnitude, logMagnitude);
     }
     
-    // Second pass: normalize and center the frequency domain representation
+    // Second pass: create centered frequency display without repetition
     for (let y = 0; y < height; y++) {
       for (let x = 0; x < width; x++) {
-        // Shift zero frequency to center (DC component in middle)
-        const shiftedX = (x + width / 2) % width;
-        const shiftedY = (y + height / 2) % height;
+        // Calculate center shift coordinates (DC component in middle)
+        const centerX = Math.floor(width / 2);
+        const centerY = Math.floor(height / 2);
         
-        const originalIndex = y * width + x;
-        const shiftedIndex = Math.floor(shiftedY) * width + Math.floor(shiftedX);
+        // Map from centered coordinates back to original FFT coordinates
+        let origX = (x - centerX + width) % width;
+        let origY = (y - centerY + height) % height;
+        
+        const originalIndex = origY * width + origX;
+        const outputIndex = (y * width + x) * 4;
         
         // Normalize magnitude to 0-255 range
         const magnitudeValue = magnitudes[originalIndex] || 0;
@@ -281,7 +267,6 @@ export default class Frequency {
         
         const pixelValue = Math.min(255, Math.max(0, normalizedMagnitude));
         
-        const outputIndex = shiftedIndex * 4;
         result[outputIndex] = pixelValue;     // Red channel
         result[outputIndex + 1] = pixelValue; // Green channel  
         result[outputIndex + 2] = pixelValue; // Blue channel
@@ -422,5 +407,19 @@ export default class Frequency {
     
     // Return the real and imaginary parts
     return fftResult;
+  }
+
+  /**
+   * Get frequency domain magnitude visualization
+   * @param imageData - The raw pixel data as Uint8ClampedArray  
+   * @param width - Width of the image in pixels
+   * @param height - Height of the image in pixels
+   * @returns A new Uint8ClampedArray with log-shifted magnitude visualization
+   */
+  static getFrequencyDomainMagnitude(imageData: Uint8ClampedArray, width: number, height: number): Uint8ClampedArray {
+    const fftResult = this.applyFFT(imageData, width, height);
+    
+    // Convert to magnitude visualization using log-shifted plot
+    return this.inverseFFT(fftResult, width, height);
   }
 }

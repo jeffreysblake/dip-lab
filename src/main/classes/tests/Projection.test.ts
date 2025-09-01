@@ -121,6 +121,53 @@ describe('Projection', () => {
     });
   });
 
+  describe('applyIsometricProjection', () => {
+    it('should apply isometric projection correctly to valid image data', () => {
+      const width = 4;
+      const height = 4;
+      const imageData = new Uint8ClampedArray(64); // 16 pixels * 4 channels
+      
+      // Set some test values
+      for (let i = 0; i < 64; i += 4) {
+        imageData[i] = 100; imageData[i + 1] = 100; imageData[i + 2] = 100; imageData[i + 3] = 255;
+      }
+
+      const result = Projection.applyIsometricProjection(imageData, width, height);
+      
+      expect(result).toBeInstanceOf(Uint8ClampedArray);
+      expect(result.length).toBe(64); // Same length as input
+    });
+
+    it('should handle rotation and offset parameters correctly', () => {
+      const width = 4;
+      const height = 4;
+      const imageData = new Uint8ClampedArray(64); // 16 pixels * 4 channels
+      
+      // Fill with test data
+      for (let i = 0; i < 64; i += 4) {
+        imageData[i] = 128; imageData[i + 1] = 128; imageData[i + 2] = 128; imageData[i + 3] = 255;
+      }
+
+      // Test with rotation and offset parameters
+      expect(() => {
+        Projection.applyIsometricProjection(imageData, width, height, 10, 10, 45, 45, 45);
+        Projection.applyIsometricProjection(imageData, width, height, -5, 5, -90, 0, 180);
+      }).not.toThrow();
+    });
+
+    it('should handle edge cases gracefully', () => {
+      const width = 1;
+      const height = 1;
+      const imageData = new Uint8ClampedArray(4); // Single pixel
+      
+      // Should not crash with minimal data
+      expect(() => {
+        Projection.applyIsometricProjection(imageData, width, height);
+        Projection.applyIsometricProjection(imageData, width, height, 0, 0, 0, 0, 0);
+      }).not.toThrow();
+    });
+  });
+
   describe('applyCustomProjection', () => {
     it('should apply custom projection correctly for different types', () => {
       const width = 2;
@@ -139,6 +186,24 @@ describe('Projection', () => {
         Projection.applyCustomProjection(imageData, width, height, 'vertical'); 
         Projection.applyCustomProjection(imageData, width, height, 'radial');
         Projection.applyCustomProjection(imageData, width, height, 'angular');
+        Projection.applyCustomProjection(imageData, width, height, 'isometric');
+      }).not.toThrow();
+    });
+
+    it('should apply isometric projection with parameters correctly', () => {
+      const width = 4;
+      const height = 4;
+      const imageData = new Uint8ClampedArray(64); // 16 pixels * 4 channels
+      
+      // Fill with test data
+      for (let i = 0; i < 64; i += 4) {
+        imageData[i] = 128; imageData[i + 1] = 128; imageData[i + 2] = 128; imageData[i + 3] = 255;
+      }
+
+      // Test isometric projection with various parameters
+      expect(() => {
+        Projection.applyCustomProjection(imageData, width, height, 'isometric', 5, 5, 30, 45, 60);
+        Projection.applyCustomProjection(imageData, width, height, 'isometric', -10, 15, -45, 90, 180);
       }).not.toThrow();
     });
 
