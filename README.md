@@ -41,12 +41,12 @@ This project provides a desktop application for digital image processing tasks u
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/yourusername/dip_electron.git
+   git clone https://github.com/yourusername/dip-lab.git
    ```
 
 2. Install dependencies:
    ```bash
-   cd dip_electron
+   cd dip_lab
    npm install
    ```
 
@@ -74,7 +74,7 @@ This project provides a desktop application for digital image processing tasks u
 ## Project Structure
 
 ```
-dip_electron/
+dip_lab/
 ├── src/
 │   ├── main/          # Electron main process
 │   └── renderer/      # Web UI components  
