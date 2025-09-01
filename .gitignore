@@ -9,7 +9,7 @@
 # TypeScript build output
 /dist
 /build
-
+/coverage
 # Logs
 *.log
 
@@ -20,6 +20,8 @@
 # Editor
 .vscode/
 .idea/
+.claude/
+CLAUDE.md
 
 # Build artifacts
 *.zip
