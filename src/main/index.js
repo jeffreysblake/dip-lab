@@ -1,37 +1,38 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-var electron_1 = require("electron");
-var path = require("path");
-var fs = require("fs");
+const electron_1 = require("electron");
+const path = require("path");
+const fs = require("fs");
+// Import IPC handlers to set up communication with renderer
+require("./ipc-handlers");
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 // For ES modules, we need to use dynamic import or remove this line
 // since electron-squirrel-startup is a CommonJS module
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
-var mainWindow = null;
-var createWindow = function () {
+let mainWindow = null;
+const createWindow = () => {
     // Create the browser window.
     mainWindow = new electron_1.BrowserWindow({
-        height: 600,
+        height: 768,
         webPreferences: {
-            nodeIntegration: true,
-            contextIsolation: false
+            nodeIntegration: false,
+            contextIsolation: true,
+            preload: path.join(__dirname, 'preload.js') // Add preload script
         },
-        width: 800,
+        width: 1024,
     });
     // and load the index.html of the app.
     // For ES modules, we need to handle paths differently
     // In CommonJS modules, __dirname points to where the compiled file lives
     // Load index.html from renderer folder (corrected path)
-    // Try multiple possible locations for better compatibility with build processes
-    var possiblePaths = [
+    const possiblePaths = [
         path.join(__dirname, '../renderer/index.html'), // Correct location for main HTML file
         path.join(__dirname, '../../src/renderer/index.html'), // Alternative location
-        './src/renderer/index.html', // Relative to current working directory
+        path.join(process.cwd(), 'src/renderer/index.html'), // Absolute path to project root
     ];
-    var indexPath = '';
-    for (var _i = 0, possiblePaths_1 = possiblePaths; _i < possiblePaths_1.length; _i++) {
-        var possiblePath = possiblePaths_1[_i];
+    let indexPath = '';
+    for (const possiblePath of possiblePaths) {
         if (fs.existsSync(possiblePath)) {
             indexPath = possiblePath;
             break;
@@ -39,14 +40,14 @@ var createWindow = function () {
     }
     if (!indexPath) {
         console.error('Could not find index.html at any expected location');
-        throw new Error('index.html file not found - please ensure it exists in the project root');
-    } // Try multiple locations for better compatibility
+        throw new Error('index.html file not found - please ensure it exists in the project root or renderer directory');
+    }
     console.log('Loading HTML from:', indexPath);
     mainWindow.loadFile(indexPath);
     // Open the DevTools.
     // mainWindow.webContents.openDevTools();
     // Emitted when the window is closed.
-    mainWindow.on('closed', function () {
+    mainWindow.on('closed', () => {
         // Dereference the window object.
         mainWindow = null;
     });
@@ -55,14 +56,14 @@ var createWindow = function () {
 // initialization and is ready to create browser windows.
 electron_1.app.whenReady().then(createWindow);
 // Quit when all windows are closed.
-electron_1.app.on('window-all-closed', function () {
+electron_1.app.on('window-all-closed', () => {
     // On OS X it is common for applications and their menu bar
     // to stay active until the user quits explicitly with Cmd + Q.
     if (process.platform !== 'darwin') {
         electron_1.app.quit();
     }
 });
-electron_1.app.on('activate', function () {
+electron_1.app.on('activate', () => {
     // On OS X it is common for applications and their menu bar
     // to stay active until the user quits explicitly with Cmd + Q.
     if (mainWindow === null) {

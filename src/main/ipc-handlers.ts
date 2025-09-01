@@ -2,6 +2,7 @@ import { ipcMain } from 'electron';
 import Spatial from './classes/Spatial';
 import Frequency from './classes/Frequency';
 import Projection from './classes/Projection';
+import BlurDetection from './classes/blurDetection';
 
 // Set up IPC handlers for spatial filtering
 ipcMain.handle('apply-spatial-filter', async (_, { imageData, width, height, filterName }) => {
@@ -117,6 +118,38 @@ ipcMain.handle('apply-projection', async (_, { imageData, width, height, project
     };
   } catch (error) {
     console.error('Error applying projection:', error);
+    if (error instanceof Error) {
+      return {
+        success: false,
+        error: error.message
+      };
+    } else {
+      return {
+        success: false,
+        error: 'Unknown error'
+      };
+    }
+  }
+});
+
+// Set up IPC handlers for blur detection analysis
+ipcMain.handle('apply-blur-detection', async (_, { imageData, width, height }) => {
+  try {
+    const imageArray = new Uint8ClampedArray(imageData);
+    
+    // Process image data using BlurDetection class - apply edge detection to get heatmap
+    const resultData = BlurDetection.detectBlur(
+      imageArray,
+      width,
+      height
+    );
+    
+    return {
+      success: true,
+      data: Array.from(resultData)
+    };
+  } catch (error) {
+    console.error('Error applying blur detection:', error);
     if (error instanceof Error) {
       return {
         success: false,

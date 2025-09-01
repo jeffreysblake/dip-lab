@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Blur Detection View</title>
+    <link rel="stylesheet" href="./shared-styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Blur Detection View</h1>
+        
+        <div class="controls">
+            <label for="image-select">Select Image:</label>
+            <select id="image-select">
+                <option value="../../assets/Lenna.png" selected>Lenna</option>
+                <option value="../../assets/clown256.jpg">Clown 256</option>
+                <option value="../../assets/cat.jpg">Cat</option>
+            </select>
+        </div>
+
+        <div class="image-container">
+            <div class="image-box">
+                <div class="image-title">Before (Original)</div>
+                <canvas id="before-canvas"></canvas>
+            </div>
+            <div class="image-box">
+                <div class="image-title">After (Blur Detection Heatmap)</div>
+                <canvas id="after-canvas"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Load the image and set up canvas
+        const img = new Image();
+        img.crossOrigin = "Anonymous";
+        
+        // Function to load a specific image based on selection
+        function loadImage(src) {
+            console.log('Loading image from:', src);
+            
+            img.onload = function() {
+                setupCanvas('before-canvas', this);
+                setupCanvas('after-canvas', this);
+                
+                // Auto-apply blur detection processing when image loads
+                applyBlurDetectionToCanvas('after-canvas');
+            };
+            
+            img.onerror = function() {
+                console.error("Failed to load image - check path resolution for:", src);
+                // Create a placeholder if the image fails to load
+                const canvas = document.getElementById('before-canvas');
+                const ctx = canvas.getContext('2d');
+                ctx.fillStyle = '#cccccc';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.fillStyle = '#333333';
+                ctx.font = '16px Arial';
+                ctx.fillText("Image failed to load", 10, 20);
+            };
+            
+            // Load image using the provided path
+            img.src = src;
+        }
+        
+        // Initial load with default Lenna.png
+        loadImage('../../assets/Lenna.png');
+        
+        // Set up image selection change event to auto-apply blur detection
+        document.getElementById('image-select').addEventListener('change', function() {
+            const selectedImage = this.value;
+            loadImage(selectedImage);
+        });
+        
+        function setupCanvas(canvasId, image) {
+            const canvas = document.getElementById(canvasId);
+            const ctx = canvas.getContext('2d');
+            
+            // Set canvas dimensions to match the image
+            canvas.width = image.width;
+            canvas.height = image.height;
+            
+            // Draw the image on the canvas
+            ctx.drawImage(image, 0, 0);
+        }
+        
+        // Blur detection processing function - simplified version that works with existing structure
+        async function applyBlurDetectionToCanvas(canvasId) {
+            const beforeCanvas = document.getElementById('before-canvas');
+            const afterCanvas = document.getElementById(canvasId);
+            const ctx = afterCanvas.getContext('2d');
+            
+            try {
+                // Ensure after canvas has correct dimensions
+                afterCanvas.width = beforeCanvas.width;
+                afterCanvas.height = beforeCanvas.height;
+                
+                // Get image data from the before canvas
+                const imageData = beforeCanvas.getContext('2d').getImageData(0, 0, beforeCanvas.width, beforeCanvas.height);
+                
+                console.log("Applying blur detection to image:", imageData.width + "x" + imageData.height);
+                
+                // Apply blur detection using backend logic
+                try {
+                    const result = await window.electronAPI.applyBlurDetection({
+                        imageData: Array.from(imageData.data),
+                        width: imageData.width,
+                        height: imageData.height
+                    });
+                    
+                    if (result && result.success && result.data) {
+                        console.log("Backend blur detection successful");
+                        // Create new ImageData from the processed data
+                        const newData = new ImageData(
+                            Uint8ClampedArray.from(result.data),
+                            imageData.width,
+                            imageData.height
+                        );
+                        
+                        // Clear canvas and draw the blur detection result
+                        ctx.clearRect(0, 0, afterCanvas.width, afterCanvas.height);
+                        ctx.putImageData(newData, 0, 0);
+                    } else {
+                        console.error("Backend blur detection failed:", result?.error || "Unknown error");
+                        displayErrorPlaceholder(ctx, afterCanvas, result?.error || "Blur detection failed");
+                    }
+                } catch (backendError) {
+                    console.error("Backend error:", backendError);
+                    displayErrorPlaceholder(ctx, afterCanvas, "Backend communication error");
+                }
+                
+                console.log("Blur detection processing complete");
+            } catch (error) {
+                console.error("Error applying blur detection:", error);
+                displayErrorPlaceholder(ctx, afterCanvas, "Blur detection error");
+            }
+        }
+        
+        // Helper function to display error placeholders
+        function displayErrorPlaceholder(ctx, canvas, message) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#ffcccc';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#cc0000';
+            ctx.font = '16px Arial';
+            ctx.fillText(message, 10, 20);
+            ctx.fillText("Check console for details", 10, 40);
+        }
+        
+    </script>
+</body>
+</html>

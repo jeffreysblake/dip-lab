@@ -4,7 +4,7 @@ describe('Spatial', () => {
   describe('Filters', () => {
     it('should have predefined filters defined', () => {
       expect(Spatial.Filters).toBeDefined();
-      expect(Object.keys(Spatial.Filters)).toHaveLength(7);
+      expect(Object.keys(Spatial.Filters)).toHaveLength(8);
     });
 
     it('should contain expected filter names', () => {
@@ -14,7 +14,8 @@ describe('Spatial', () => {
         'Mean Removal',
         'Emboss Laplascian',
         'Sobel',
-        'Edge Detect',
+        'Horizontal Edge',
+        'Vertical Edge',
         'Identity'
       ];
       
@@ -199,7 +200,7 @@ describe('Spatial', () => {
       // Ensure we test all the documented features from docs/Testing_Specifications.md
       
       // Test that filters exist and are accessible
-      expect(Object.keys(Spatial.Filters)).toHaveLength(7);
+      expect(Object.keys(Spatial.Filters)).toHaveLength(8);
       
       // Test that applyFilter method exists with correct signature
       const result = Spatial.applyFilter(new Uint8ClampedArray(4), 1, 1, 'Identity');

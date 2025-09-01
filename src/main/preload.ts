@@ -37,5 +37,14 @@ contextBridge.exposeInMainWorld('electronAPI', {
       console.error('Error in getFrequencyDomain:', error);
       throw new Error(`Failed to get frequency domain: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
+  },
+  applyBlurDetection: async (data: any) => {
+    try {
+      const result = await ipcRenderer.invoke('apply-blur-detection', data);
+      return result;
+    } catch (error) {
+      console.error('Error in applyBlurDetection:', error);
+      throw new Error(`Failed to process blur detection: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
   }
 });
