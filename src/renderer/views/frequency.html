@@ -62,6 +62,7 @@
         <div class="controls">
             <label for="filter-select">Select Frequency Filter:</label>
             <select id="filter-select">
+                <option value="identity" selected>Identity (FFT Magnitude)</option>
                 <option value="lowpass">Low Pass Filter</option>
                 <option value="highpass">High Pass Filter</option>
                 <option value="bandpass">Band Pass Filter</option>
@@ -70,11 +71,11 @@
 
         <div class="image-container">
             <div class="image-box">
-                <div class="image-title">Before (Original)</div>
+                <div class="image-title">Spatial Domain (Original Image)</div>
                 <canvas id="before-canvas"></canvas>
             </div>
             <div class="image-box">
-                <div class="image-title">After (Filtered)</div>
+                <div class="image-title">Frequency Domain (FFT Magnitude)</div>
                 <canvas id="after-canvas"></canvas>
             </div>
         </div>
@@ -87,8 +88,7 @@
         
         img.onload = function() {
             setupCanvas('before-canvas', this);
-            setupCanvas('after-canvas', this);
-            applyFrequencyFilterToCanvas('after-canvas', 'lowpass');
+            displayFrequencyDomain('after-canvas');
         };
         
         img.onerror = function() {
@@ -110,7 +110,11 @@
         // Set up filter change event
         document.getElementById('filter-select').addEventListener('change', function() {
             const selectedFilter = this.value;
-            applyFrequencyFilterToCanvas('after-canvas', selectedFilter);
+            if (selectedFilter === 'identity') {
+                displayFrequencyDomain('after-canvas');
+            } else {
+                displayFilteredFrequencyDomain('after-canvas', selectedFilter);
+            }
         });
         
         function setupCanvas(canvasId, image) {
@@ -125,16 +129,68 @@
             ctx.drawImage(image, 0, 0);
         }
         
-        async function applyFrequencyFilterToCanvas(canvasId, filterType) {
+        async function displayFrequencyDomain(canvasId) {
             const beforeCanvas = document.getElementById('before-canvas');
             const afterCanvas = document.getElementById(canvasId);
             const ctx = afterCanvas.getContext('2d');
+            
+            // Set after canvas dimensions to match before canvas
+            afterCanvas.width = beforeCanvas.width;
+            afterCanvas.height = beforeCanvas.height;
             
             try {
                 // Get image data from the before canvas
                 const imageData = beforeCanvas.getContext('2d').getImageData(0, 0, beforeCanvas.width, beforeCanvas.height);
                 
-                // Apply frequency filter using backend logic
+                // Get frequency domain representation using backend logic
+                try {
+                    const result = await window.electronAPI.getFrequencyDomain({
+                        imageData: Array.from(imageData.data),
+                        width: imageData.width,
+                        height: imageData.height
+                    });
+                    
+                    if (result && result.data) {
+                        // Create new ImageData from the frequency domain data
+                        const newData = new ImageData(
+                            Uint8ClampedArray.from(result.data), 
+                            imageData.width, 
+                            imageData.height
+                        );
+                        
+                        // Clear canvas and draw the frequency domain representation
+                        ctx.clearRect(0, 0, afterCanvas.width, afterCanvas.height);
+                        ctx.putImageData(newData, 0, 0);
+                    } else {
+                        console.error("Backend returned invalid frequency domain result");
+                        displayPlaceholder(ctx, afterCanvas, "FFT error");
+                    }
+                } catch (backendError) {
+                    console.error("Backend error:", backendError);
+                    displayPlaceholder(ctx, afterCanvas, "Backend error");
+                }
+                
+                console.log("Displayed frequency domain representation");
+            } catch (error) {
+                console.error("Error displaying frequency domain:", error);
+                displayPlaceholder(ctx, afterCanvas, "Display error");
+            }
+        }
+
+        async function displayFilteredFrequencyDomain(canvasId, filterType) {
+            const beforeCanvas = document.getElementById('before-canvas');
+            const afterCanvas = document.getElementById(canvasId);
+            const ctx = afterCanvas.getContext('2d');
+            
+            // Set after canvas dimensions to match before canvas
+            afterCanvas.width = beforeCanvas.width;
+            afterCanvas.height = beforeCanvas.height;
+            
+            try {
+                // Get image data from the before canvas
+                const imageData = beforeCanvas.getContext('2d').getImageData(0, 0, beforeCanvas.width, beforeCanvas.height);
+                
+                // For now, show the filtered spatial result until proper frequency domain filtering is implemented
                 try {
                     const result = await window.electronAPI.applyFrequencyFilter({
                         imageData: Array.from(imageData.data),
@@ -144,44 +200,39 @@
                     });
                     
                     if (result && result.data) {
-                        // Create new ImageData from the processed data
+                        // Create new ImageData from the filtered data
                         const newData = new ImageData(
                             Uint8ClampedArray.from(result.data), 
                             imageData.width, 
                             imageData.height
                         );
                         
-                        // Clear canvas and draw the processed image
+                        // Clear canvas and draw the filtered result
                         ctx.clearRect(0, 0, afterCanvas.width, afterCanvas.height);
                         ctx.putImageData(newData, 0, 0);
                     } else {
                         console.error("Backend filter returned invalid result");
-                        // Fallback to simple grayscale conversion if backend fails
-                        ctx.clearRect(0, 0, afterCanvas.width, afterCanvas.height);
-                        ctx.filter = 'grayscale(100%)';
-                        ctx.drawImage(beforeCanvas, 0, 0, afterCanvas.width, afterCanvas.height);
-                        ctx.filter = 'none';
+                        displayPlaceholder(ctx, afterCanvas, "Filter error");
                     }
                 } catch (backendError) {
                     console.error("Backend error:", backendError);
-                    // Fallback to simple grayscale conversion if backend fails
-                    ctx.clearRect(0, 0, afterCanvas.width, afterCanvas.height);
-                    ctx.filter = 'grayscale(100%)';
-                    ctx.drawImage(beforeCanvas, 0, 0, afterCanvas.width, afterCanvas.height);
-                    ctx.filter = 'none';
+                    displayPlaceholder(ctx, afterCanvas, "Backend error");
                 }
                 
                 console.log("Applied frequency filter:", filterType);
             } catch (error) {
                 console.error("Error applying frequency filter:", error);
-                // Fallback: draw a placeholder if there's an issue
-                ctx.clearRect(0, 0, afterCanvas.width, afterCanvas.height);
-                ctx.fillStyle = '#cccccc';
-                ctx.fillRect(0, 0, afterCanvas.width, afterCanvas.height);
-                ctx.fillStyle = '#333333';
-                ctx.font = '16px Arial';
-                ctx.fillText("Filter error", 10, 20);
+                displayPlaceholder(ctx, afterCanvas, "Filter error");
             }
+        }
+
+        function displayPlaceholder(ctx, canvas, message) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#cccccc';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#333333';
+            ctx.font = '16px Arial';
+            ctx.fillText(message, 10, 20);
         }
     </script>
 </body>

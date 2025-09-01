@@ -28,5 +28,14 @@ contextBridge.exposeInMainWorld('electronAPI', {
       console.error('Error in applyProjection:', error);
       throw new Error(`Failed to process projection: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
+  },
+  getFrequencyDomain: async (data: any) => {
+    try {
+      const result = await ipcRenderer.invoke('get-frequency-domain', data);
+      return result;
+    } catch (error) {
+      console.error('Error in getFrequencyDomain:', error);
+      throw new Error(`Failed to get frequency domain: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
   }
 });

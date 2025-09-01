@@ -62,6 +62,7 @@
         <div class="controls">
             <label for="projection-select">Select Projection Type:</label>
             <select id="projection-select">
+                <option value="isometric" selected>Isometric 2.5D View</option>
                 <option value="horizontal">Horizontal Projection</option>
                 <option value="vertical">Vertical Projection</option>
                 <option value="radial">Radial Projection</option>
@@ -89,7 +90,7 @@
         img.onload = function() {
             setupCanvas('before-canvas', this);
             setupCanvas('after-canvas', this);
-            applyProjectionToCanvas('after-canvas', 'horizontal');
+            applyProjectionToCanvas('after-canvas', 'isometric');
         };
         
         img.onerror = function() {

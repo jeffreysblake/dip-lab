@@ -87,10 +87,24 @@ export default class Spatial {
           }
         }
         
-        // Normalize and set pixel
-        const normalizedR = Math.min(255, Math.max(0, sumR / normalizeFactor));
-        const normalizedG = Math.min(255, Math.max(0, sumG / normalizeFactor));
-        const normalizedB = Math.min(255, Math.max(0, sumB / normalizeFactor));
+        // Handle filters that can produce negative values (like Mean Removal)
+        let normalizedR, normalizedG, normalizedB;
+        
+        if (kernelName === "Mean Removal") {
+          // For Mean Removal, use proper contrast enhancement
+          const scaleR = (sumR / normalizeFactor) * 2 + 128;
+          const scaleG = (sumG / normalizeFactor) * 2 + 128;  
+          const scaleB = (sumB / normalizeFactor) * 2 + 128;
+          
+          normalizedR = Math.min(255, Math.max(0, scaleR));
+          normalizedG = Math.min(255, Math.max(0, scaleG));
+          normalizedB = Math.min(255, Math.max(0, scaleB));
+        } else {
+          // Standard normalization for other filters
+          normalizedR = Math.min(255, Math.max(0, sumR / normalizeFactor));
+          normalizedG = Math.min(255, Math.max(0, sumG / normalizeFactor));
+          normalizedB = Math.min(255, Math.max(0, sumB / normalizeFactor));
+        }
         
         const index = (y * width + x) * 4;
         result[index] = normalizedR;

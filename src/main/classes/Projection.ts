@@ -227,12 +227,70 @@ export default class Projection {
   }
 
   /**
+   * Apply isometric 2.5D projection to visualize brightness as height
+   * 
+   * @param imageData - The raw pixel data as Uint8ClampedArray
+   * @param width - Width of the image in pixels  
+   * @param height - Height of the image in pixels
+   * @returns A new Uint8ClampedArray with isometric projection applied
+   */
+  static applyIsometricProjection(imageData: Uint8ClampedArray, width: number, height: number): Uint8ClampedArray {
+    const result = new Uint8ClampedArray(width * height * 4);
+    
+    // Fill with background
+    for (let i = 0; i < result.length; i += 4) {
+      result[i] = 20;     // Dark background
+      result[i + 1] = 20;
+      result[i + 2] = 40;
+      result[i + 3] = 255;
+    }
+    
+    // Isometric transformation parameters
+    const scaleX = 0.5;
+    const scaleY = 0.3;
+    const heightScale = 0.2;
+    const offsetX = width * 0.2;
+    const offsetY = height * 0.1;
+    
+    // Sample every 4th pixel for performance
+    for (let y = 0; y < height; y += 4) {
+      for (let x = 0; x < width; x += 4) {
+        const srcIndex = (y * width + x) * 4;
+        
+        // Get brightness (height)
+        const r = imageData[srcIndex] || 0;
+        const g = imageData[srcIndex + 1] || 0;
+        const b = imageData[srcIndex + 2] || 0;
+        const brightness = (0.299 * r + 0.587 * g + 0.114 * b);
+        const heightOffset = brightness * heightScale;
+        
+        // Isometric transformation
+        const isoX = Math.floor((x - y) * scaleX + offsetX);
+        const isoY = Math.floor((x + y) * scaleY + offsetY - heightOffset);
+        
+        if (isoX >= 0 && isoX < width && isoY >= 0 && isoY < height) {
+          const destIndex = (isoY * width + isoX) * 4;
+          
+          // Color based on height/brightness with some ambient lighting
+          const lightness = Math.min(255, brightness + 60);
+          result[destIndex] = Math.min(255, lightness * 0.8);     // Reddish tint
+          result[destIndex + 1] = Math.min(255, lightness * 0.9); // Green
+          result[destIndex + 2] = Math.min(255, lightness);       // Blue
+          result[destIndex + 3] = 255;
+        }
+      }
+    }
+    
+    return result;
+  }
+
+  /**
    * Apply a custom type of projection to an image.
    * 
    * @param imageData - The raw pixel data as Uint8ClampedArray
    * @param width - Width of the image in pixels  
    * @param height - Height of the image in pixels
-   * @param projectionType - Type of projection to apply ('horizontal', 'vertical', 'radial', or 'angular')
+   * @param projectionType - Type of projection to apply
    * @returns A new Uint8ClampedArray with custom projection applied
    * @throws Error if input parameters are invalid or dimensions don't match
    * @example
@@ -242,6 +300,8 @@ export default class Projection {
   static applyCustomProjection(imageData: Uint8ClampedArray, width: number, height: number, 
                           projectionType: string): Uint8ClampedArray {
     switch(projectionType) {
+      case 'isometric':
+        return this.applyIsometricProjection(imageData, width, height);
       case 'horizontal':
         return this.applyHorizontalProjection(imageData, width, height);
       case 'vertical':  

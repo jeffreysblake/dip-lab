@@ -70,6 +70,35 @@ ipcMain.handle('apply-frequency-filter', async (_, { imageData, width, height, f
   }
 });
 
+// Set up IPC handlers for getting frequency domain representation
+ipcMain.handle('get-frequency-domain', async (_, { imageData, width, height }) => {
+  try {
+    const imageArray = new Uint8ClampedArray(imageData);
+    
+    // Get FFT data and convert to visualizable format
+    const fftResult = Frequency.applyFFT(imageArray, width, height);
+    const visualData = Frequency.inverseFFT(fftResult, width, height);
+    
+    return {
+      success: true,
+      data: Array.from(visualData)
+    };
+  } catch (error) {
+    console.error('Error getting frequency domain:', error);
+    if (error instanceof Error) {
+      return {
+        success: false,
+        error: error.message
+      };
+    } else {
+      return {
+        success: false,
+        error: 'Unknown error'
+      };
+    }
+  }
+});
+
 // Set up IPC handlers for projection analysis
 ipcMain.handle('apply-projection', async (_, { imageData, width, height, projectionType }) => {
   try {
