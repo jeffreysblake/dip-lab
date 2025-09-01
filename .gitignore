@@ -10,6 +10,7 @@
 /dist
 /build
 /coverage
+/docs
 # Logs
 *.log
 
@@ -21,7 +22,8 @@
 .vscode/
 .idea/
 .claude/
-CLAUDE.md
+
 
 # Build artifacts
 *.zip
+CLAUDE.md
